@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>観察レポート 2026年05月17日</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --up: #3fb950;
+      --down: #f85149; --accent: #58a6ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; padding: 2rem 1rem; }
+    .container { max-width: 860px; margin: 0 auto; }
+    header { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+    header h1 { font-size: 1.1rem; color: var(--muted); font-weight: 400; letter-spacing: 0.05em; }
+    header h2 { font-size: 1.8rem; font-weight: 700; margin-top: 0.3rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); }
+    .ticker { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--accent); }
+    .name { margin-left: 0.8rem; color: var(--muted); font-size: 0.9rem; }
+    .price { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 600; }
+    .change { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; margin-left: 0.6rem; font-weight: 600; }
+    .change.up { color: var(--up); } .change.down { color: var(--down); }
+    .metrics { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+    .metric { flex: 1; padding: 0.8rem 1rem; border-right: 1px solid var(--border); text-align: center; }
+    .metric:last-child { border-right: none; }
+    .metric .label { display: block; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+    .metric .value { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; }
+    .report-body { padding: 1.5rem; line-height: 1.9; font-size: 0.92rem; color: #cdd9e5; white-space: pre-wrap; }
+    footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 株式定点観察レポート</h1>
+      <h2>2026年05月17日</h2>
+    </header>
+    
+        <div class="card">
+          <div class="card-header">
+            <div class="ticker-info">
+              <span class="ticker">4502.T</span>
+              <span class="name">Takeda Pharmaceutical Company Limited</span>
+            </div>
+            <div class="price-info">
+              <span class="price">5,277.00</span>
+              <span class="change up">+0.40%</span>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span class="label">RSI</span><span class="value">36.1</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">5,211.00</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">5,436.28</span></div>
+            <div class="metric"><span class="label">MACDヒスト</span><span class="value">-2.326</span></div>
+          </div>
+          <div class="report-body"># 武田薬品工業（4502.T）観察記録<br><br>**観察日時**: 2024年（基準日）  <br>**現在値**: 5,277円（前日比 +0.40%）<br><br>---<br><br>## 1. 総合観察<br><br>**🔴 下落傾向（弱〜中）**<br><br>現在値は中期・長期の移動平均線を下回る位置にあり、全体的には調整局面の様相を呈しています。ただし、短期移動平均線（MA5）は上回っており、短期的な反発の動きも見られます。<br><br>---<br><br>## 2. 各指標の観察<br><br>### 移動平均線の配置<br>- **MA5（5,211円）**: 現在値が+66円上回る（短期では上昇）<br>- **MA25（5,436円）**: 現在値が-159円下回る（中期では下値圏）<br>- **MA75（5,497円）**: 現在値が-221円下回る（長期トレンドより弱い）<br>- 移動平均線は下向きの配列を示唆する位置関係<br><br>### モメンタム指標<br>- **RSI(14): 36.1** - 売られ過ぎ水準（30）に近く、やや過熱感の解消された状態<br>- **MACD**: マイナス圏（-106.318）で推移、シグナル線も下回る弱気配置<br>- **ヒストグラム**: -2.326と縮小傾向（前日-11.310から改善）<br><br>### ボリンジャーバンド<br>- 現在値は中央線（5,356円）を下回り、下限（5,019円）との中間に位置<br>- バンド幅: 673円（上限5,693円 - 下限5,019円）<br><br>### 出来高<br>- 直近出来高: 5,258,600株<br>- 5日平均: 4,477,560株<br>- **平均比+17.4%の増加** - 売買が活発化<br><br>---<br><br>## 3. 前日からの変化<br><br>初回観察のため前日比較データはありませんが、以下の点が観察されます：<br><br>- MACDヒストグラムの前日値（-11.310）から今日（-2.326）への大幅な縮小は、下落圧力の減退を示唆<br>- わずかながら上昇（+0.40%）し、出来高を伴っている点は注目に値する<br>- 短期移動平均線を上回る位置を維持<br><br>---<br><br>## 4. 今日の注目ポイント<br><br>### 重要な価格水準<br>- **5,436円（MA25）**: 中期トレンド回復の鍵となる水準<br>- **5,211円（MA5）**: 短期サポートとして機能するか<br>- **5,019円（下限バンド）**: 下値の目安<br><br>### 指標の転換点<br>- **RSI 36.1**: 30を割り込むか、40を回復するかの分岐点<br>- **MACDヒストグラム**: ゼロラインへの接近継続の有無<br>- **出来高**: 平均以上の水準が継続するか<br><br>### 注視すべきシグナル<br>- 5日移動平均線を維持できるかどうか<br>- MACDのダイバージェンス（価格とMACDの乖離）の発生有無<br><br>---<br><br>## 5. リスク観察<br><br>### 下方リスク<br>- 中期・長期移動平均</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="ticker-info">
+              <span class="ticker">9984.T</span>
+              <span class="name">SoftBank Group Corp.</span>
+            </div>
+            <div class="price-info">
+              <span class="price">5,745.00</span>
+              <span class="change down">-0.43%</span>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span class="label">RSI</span><span class="value">57.1</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">5,851.40</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">5,101.24</span></div>
+            <div class="metric"><span class="label">MACDヒスト</span><span class="value">-18.268</span></div>
+          </div>
+          <div class="report-body"># 9984.T SoftBank Group Corp. マーケット観察記録<br><br>**記録日時**: 2025年（基準日）  <br>**現在値**: 5,745円（前日比 -0.43%）<br><br>---<br><br>## 1. 総合観察<br><br>**🟢 上昇傾向（中程度）**<br><br>中期的な上昇トレンドの中で、短期的な調整局面に入りつつある状態が観察されます。長期移動平均線からは大きく上方に位置していますが、直近5日間の平均値を下回っており、短期的な勢いの減速が見られます。<br><br>---<br><br>## 2. 各指標の観察<br><br>### 移動平均線の配置<br>- **MA5（5,851円）**: 現在値より106円上方に位置<br>- **MA25（5,101円）**: 現在値より644円下方に位置<br>- **MA75（4,359円）**: 現在値より1,386円下方に位置<br>- 中長期の上昇トレンドは維持、ただし短期線を下回る<br><br>### モメンタム指標<br>- **RSI(14): 57.1** - 中立圏内でやや買い優勢の水準<br>- **MACD**: ヒストグラムが前日+7.731から-18.268へ反転、下降シグナル発生<br><br>### ボラティリティと価格帯<br>- **ボリンジャーバンド**: 中央線（5,441円）より304円上方<br>- バンド中心線との乖離率: +5.6%<br>- バンド幅は広く、ボラティリティは高い状態<br><br>### 出来高<br>- **直近出来高**: 69,924,000株<br>- 5日平均を約7%上回り、取引は活発<br><br>---<br><br>## 3. 前日からの変化<br><br>- 株価は25円安（-0.43%）と小幅下落<br>- **MACDヒストグラムが+7.731から-18.268へ急変**、プラス圏からマイナス圏へ転換<br>- 出来高は平均を上回る水準で推移、売買は活発<br>- RSIは中立圏内を維持しており、過熱感は後退<br><br>---<br><br>## 4. 今日の注目ポイント<br><br>🔍 **MA5（5,851円）との位置関係**  <br>短期移動平均線を下回っており、この水準を回復できるかが短期的な方向感の鍵となります。<br><br>🔍 **MACDのシグナル転換**  <br>ヒストグラムが明確にマイナス圏へ転じたため、この傾向が継続するか一時的なものかの見極めが必要です。<br><br>🔍 **ボリンジャーバンド中央線（5,441円）**  <br>現在は中央線より上方にありますが、この水準が次のサポートラインとして機能するか観察が必要です。<br><br>🔍 **出来高の継続性**  <br>平均を上回る出来高の中での下落であり、調整の強さを示唆する可能性があります。<br><br>---<br><br>## 5. リスク観察<br><br>⚠️ **短期的な調整圧力**  <br>MA5を下回り、MACDがデッドクロス的な動きを示しており、短期的な下押し圧力が強まる可能性があります。<br><br>⚠️ **MA25（5,101円）水準への接近リスク**  <br>調整が</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="ticker-info">
+              <span class="ticker">6758.T</span>
+              <span class="name">Sony Group Corporation</span>
+            </div>
+            <div class="price-info">
+              <span class="price">3,576.00</span>
+              <span class="change up">+3.83%</span>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span class="label">RSI</span><span class="value">59.2</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">3,507.20</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">3,322.32</span></div>
+            <div class="metric"><span class="label">MACDヒスト</span><span class="value">43.196</span></div>
+          </div>
+          <div class="report-body"># 6758.T Sony Group Corporation - 市場観察記録<br><br>**観察日時**: 2025年（基準日）<br>**現在値**: 3,576.00円（前日比 +3.83%）<br><br>---<br><br>## 1. 総合観察<br><br>**🟢 上昇傾向（中）**<br><br>現在値が主要移動平均線すべてを上回り、本日は大幅な上昇を記録。テクニカル指標は概ね上向きのシグナルを示しているが、一部過熱感を示す兆候も観察される。<br><br>---<br><br>## 2. 各指標の観察<br><br>### 価格と移動平均線の位置関係<br>- 現在値3,576円は5日線（3,507円）を**+1.97%**上回る<br>- 25日線（3,322円）を**+7.64%**上回る位置で推移<br>- 75日線（3,369円）も**+6.14%**上回り、中長期的な上値圏に位置<br><br>### モメンタム指標<br>- **RSI(14)**: 59.2 - 中立圏からやや買われ気味の水準、過熱域（70超）まで余地あり<br>- **MACD**: ヒストグラム43.196と大きく拡大、MACDライン41.606がシグナル-1.590を大幅に上回る明確な上昇シグナル<br><br>### ボラティリティ<br>- ボリンジャーバンド上限（3,626円）まで残り**約50円（1.4%）**<br>- 中央線（3,320円）から**+7.7%**の位置で、バンド上方に接近中<br>- バンド幅は比較的広く、ボラティリティは高い状態<br><br>### 出来高<br>- 直近出来高31,904,000株は5日平均43,957,160株の**約73%**と低調<br>- 価格上昇にもかかわらず出来高が伴っていない点は留意事項<br><br>---<br><br>## 3. 前日からの変化<br><br>- **価格変動**: +3.83%の大幅上昇を記録<br>- **MACDヒストグラム**: 37.597→43.196と拡大、上昇モメンタムが加速<br>- **出来高**: 平均を下回る水準で、参加者の慎重姿勢が窺える<br><br>---<br><br>## 4. 今日の注目ポイント<br><br>1. **ボリンジャーバンド上限（3,626円）への接近**<br>   - あと50円程度で上限到達、反発の可能性を観察<br><br>2. **MACDの強い上昇シグナル**<br>   - ヒストグラムの大幅拡大が継続するか要注視<br><br>3. **出来高の動向**<br>   - 価格上昇局面での出来高増加の有無が重要な確認ポイント<br><br>4. **3,600円の心理的節目**<br>   - 大台手前での価格動向と抵抗感の有無<br><br>---<br><br>## 5. リスク観察<br><br>### 注意すべき兆候<br><br>- **出来高の乖離**: 価格上昇に対して出来高が伴わない状態は、上昇の持続性に疑問符<br>- **バンド上限接近**: 統計的な高値圏に近づいており、短期的な調整リスクが高まる<br>- **急激なモメンタム加速**: MACDヒストグラムの急</div>
+        </div>
+
+    <footer>
+      <p>このレポートは観察記録です。投資判断の根拠にしないでください。</p>
+      <p style="margin-top:0.5rem"><a href="../index.html">← レポート一覧へ</a></p>
+    </footer>
+  </div>
+</body>
+</html>
