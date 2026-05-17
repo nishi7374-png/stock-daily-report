@@ -186,7 +186,38 @@ def generate_report(client, ind, prev_data):
 ※初回観察の場合はこのセクションを省略してください。
 
 ---AI強気スコア---
-数字のみ（0〜100の整数）
+以下の採点基準で合計点を計算し、数字のみ（0〜100の整数）を出力してください。
+
+【採点基準（合計100点）】
+■ トレンド方向（30点）
+・株価がMA5・MA25・MA75すべて上回っている → 30点
+・MA25・MA75のみ上回っている → 20点
+・MA75のみ上回っている → 10点
+・すべて下回っている → 0点
+
+■ モメンタム＝MACD（25点）
+・MACDヒストがプラスかつ前日より拡大 → 25点
+・MACDヒストがプラスだが縮小 → 15点
+・MACDヒストがマイナスだが縮小中（底打ち兆候） → 10点
+・MACDヒストがマイナスかつ拡大（下落加速） → 0点
+
+■ 過熱感＝RSI（20点）
+・RSI 45〜65（健全な上昇圏） → 20点
+・RSI 65〜75（やや過熱だが上昇余地あり） → 12点
+・RSI 75以上（過熱圏） → 5点
+・RSI 45未満（弱気圏） → 0点
+
+■ 出来高（15点）
+・直近出来高が5日平均の110%以上 → 15点
+・90〜110%（平均並み） → 10点
+・90%未満（低調） → 5点
+
+■ ボリンジャーバンド（10点）
+・株価がBBミッド〜BB上限の間 → 10点
+・株価がBB上限を超えている（突破または過熱） → 5点
+・株価がBBミッド未満 → 0点
+
+合計点を0〜100の整数で出力。
 
 ---明日の予測---
 上昇シナリオ: （価格）円
@@ -329,22 +360,40 @@ def build_note_text(date_str, results, previous):
         lines.append("━" * 30)
         lines.append(f"■ {ind['name']}（{ind['ticker']}）")
         lines.append("")
+        lines.append("")
 
-        # 主要指標（1行にまとめてコンパクトに）
+        # 主要指標：縦並び・頭揃え
         lines.append("【本日の主要指標】")
-        lines.append(f"現在値：{ind['price']:,.0f}円（{change_sign}{change_abs:.2f}%）／RSI：{ind['rsi']:.1f}／MA5：{ind['ma5']:,.0f}円／MA25：{ind['ma25']:,.0f}円")
-        lines.append(f"MACDヒスト：{ind['macd_hist']:.3f}／出来高：{ind['volume']:,.0f}（5日平均比 {vol_ratio:.0f}%）")
+        lines.append(f"現在値　：{ind['price']:,.0f}円（{change_sign}{change_abs:.2f}%）")
+        lines.append(f"RSI　　 ：{ind['rsi']:.1f}")
+        lines.append(f"MA5　　 ：{ind['ma5']:,.0f}円")
+        lines.append(f"MA25　　：{ind['ma25']:,.0f}円")
+        lines.append(f"MACD　　：{ind['macd_hist']:.3f}")
+        lines.append(f"出来高　：{ind['volume']:,.0f}（5日平均比 {vol_ratio:.0f}%）")
+        lines.append("")
         lines.append("")
 
         # AI観察コメント
         lines.append("【AI観察コメント】")
         lines.append(parsed["comment"] if parsed["comment"] else "（取得できませんでした）")
         lines.append("")
+        lines.append("")
 
         # AI強気スコア
         score = parsed["score"]
-        score_str = f"{score}点 / 100点" if score is not None else "―"
+        if score is not None:
+            if score >= 70:
+                score_label = "強気"
+            elif score >= 50:
+                score_label = "中立"
+            else:
+                score_label = "弱気"
+            score_str = f"{score}点 / 100点（{score_label}）"
+        else:
+            score_str = "―"
         lines.append(f"AI強気スコア：{score_str}")
+        lines.append("※トレンド・MACD・RSI・出来高・BBを採点した総合スコアです")
+        lines.append("")
         lines.append("")
 
         # 昨日の予測答え合わせ
@@ -356,27 +405,42 @@ def build_note_text(date_str, results, previous):
             if parsed["review"]:
                 lines.append(f"振り返り：{parsed['review']}")
             lines.append("")
+            lines.append("")
 
-        # 明日の予測
+        # 明日の予測（行間詰め）
         p = parsed["predictions"]
         if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
             lines.append("【明日の予測シナリオ】")
             if p["bullish_price"]:
-                lines.append(f"上昇：{p['bullish_price']:,}円")
+                lines.append(f"上昇　　：{p['bullish_price']:,}円")
             if p["neutral_range"]:
-                lines.append(f"横ばい：{p['neutral_range']}円")
+                lines.append(f"横ばい　：{p['neutral_range']}円")
             if p["bearish_price"]:
-                lines.append(f"下落：{p['bearish_price']:,}円")
+                lines.append(f"下落　　：{p['bearish_price']:,}円")
+            lines.append("")
             lines.append("")
 
-    # 総括
-    lines.append("━" * 30)
-    lines.append("【本日の総括】")
-    if total_count > 0:
-        lines.append(f"本日の予測答え合わせ：{hit_rate}（{hit_count}/{total_count}）")
-    lines.append("")
+        # 企業ごとの総括
+        lines.append("【総括】")
+        actual = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
+        if pred and pred.get("scenario"):
+            hit_str = "✅ 的中" if pred["scenario"] == actual else "❌ 外れ"
+            lines.append(f"予測答え合わせ：{hit_str}")
+        score_comment = ""
+        if parsed["score"] is not None:
+            s = parsed["score"]
+            if s >= 70:
+                score_comment = "強気継続"
+            elif s >= 50:
+                score_comment = "中立圏"
+            else:
+                score_comment = "弱気圏"
+            lines.append(f"強気スコア {s}点（{score_comment}）・本日{actual}")
+        lines.append("")
+        lines.append("")
 
-    # 免責
+    # 全体免責＆ハッシュタグ
+    lines.append("━" * 30)
     lines.append("※本記事はAIによる市場観察記録であり、投資助言を目的とするものではありません。")
     lines.append("")
     lines.append(f"#株式観察 #テクニカル分析 #定点観測 #AI予測検証 #{today.strftime('%Y%m%d')}")
