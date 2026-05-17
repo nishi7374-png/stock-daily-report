@@ -21,9 +21,9 @@
       "volume_ma5": 4477560.0
     },
     "predictions": {
-      "bullish_price": 5330,
-      "neutral_range": "5,250〜5,310",
-      "bearish_price": 5180,
+      "bullish_price": 5320,
+      "neutral_range": "5,250〜5,300",
+      "bearish_price": 5200,
       "scenario": "横ばい"
     }
   },
@@ -50,7 +50,7 @@
     },
     "predictions": {
       "bullish_price": 5880,
-      "neutral_range": "5,680〜5,780",
+      "neutral_range": "5,680〜5,800",
       "bearish_price": 5580,
       "scenario": "横ばい"
     }
@@ -78,7 +78,7 @@
     },
     "predictions": {
       "bullish_price": 3630,
-      "neutral_range": "3,550〜3,600",
+      "neutral_range": "3,560〜3,600",
       "bearish_price": 3520,
       "scenario": "横ばい"
     }
