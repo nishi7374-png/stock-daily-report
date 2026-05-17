@@ -1,9 +1,11 @@
 """
 株式定点観察レポート - 毎日自動生成スクリプト
 対象銘柄はconfig.jsonで管理
+土日・日本市場の祝日は自動スキップ
 """
 
 import os
+import sys
 import json
 import time
 import datetime
@@ -24,6 +26,89 @@ INDEX_FILE  = BASE_DIR / "index.html"
 REPORT_DIR.mkdir(exist_ok=True)
 NOTE_DIR.mkdir(exist_ok=True)
 (BASE_DIR / "data").mkdir(exist_ok=True)
+
+# ─── 市場開場チェック ─────────────────────────────────────────────
+def get_jp_holidays(year):
+    """日本の祝日セットを返す（固定祝日＋ハッピーマンデー＋振替休日）"""
+    holidays = set()
+
+    # 固定祝日
+    fixed = [
+        (1, 1),   # 元日
+        (2, 11),  # 建国記念の日
+        (2, 23),  # 天皇誕生日
+        (4, 29),  # 昭和の日
+        (5, 3),   # 憲法記念日
+        (5, 4),   # みどりの日
+        (5, 5),   # こどもの日
+        (8, 11),  # 山の日
+        (11, 3),  # 文化の日
+        (11, 23), # 勤労感謝の日
+        (12, 31), # 大晦日（市場休場）
+    ]
+    for m, d in fixed:
+        holidays.add(datetime.date(year, m, d))
+
+    # ハッピーマンデー
+    def nth_monday(year, month, n):
+        first = datetime.date(year, month, 1)
+        first_monday = first + datetime.timedelta(days=(7 - first.weekday()) % 7)
+        return first_monday + datetime.timedelta(weeks=n - 1)
+
+    holidays.add(nth_monday(year, 1, 2))   # 成人の日（1月第2月曜）
+    holidays.add(nth_monday(year, 7, 3))   # 海の日（7月第3月曜）
+    holidays.add(nth_monday(year, 9, 3))   # 敬老の日（9月第3月曜）
+    holidays.add(nth_monday(year, 10, 2))  # スポーツの日（10月第2月曜）
+
+    # 春分・秋分（概算）
+    spring_day = 20 if year % 4 == 0 else 21
+    autumn_day = 23 if year % 4 < 2 else 22
+    holidays.add(datetime.date(year, 3, spring_day))
+    holidays.add(datetime.date(year, 9, autumn_day))
+
+    # 振替休日（祝日が日曜 → 翌月曜）
+    extra = set()
+    for h in holidays:
+        if h.weekday() == 6:
+            extra.add(h + datetime.timedelta(days=1))
+    holidays |= extra
+
+    return holidays
+
+
+def is_market_open_today():
+    """
+    今日が東証の取引日かどうかを3段階で判定。
+    1) 土日 → False
+    2) 日本の祝日 → False
+    3) yfinanceで日経平均の最終取引日が今日かどうかを確認（祝日の漏れをカバー）
+    """
+    today = datetime.date.today()
+
+    # 1) 土日
+    if today.weekday() >= 5:
+        day_name = "土曜日" if today.weekday() == 5 else "日曜日"
+        print(f"[スキップ] 本日（{today}）は{day_name}のため市場休場です。")
+        return False
+
+    # 2) 日本の祝日
+    if today in get_jp_holidays(today.year):
+        print(f"[スキップ] 本日（{today}）は日本の祝日のため市場休場です。")
+        return False
+
+    # 3) yfinanceで実際の最終取引日を確認（祝日リストに漏れがあっても補足）
+    try:
+        df = yf.download("^N225", period="5d", progress=False, auto_adjust=True)
+        if not df.empty:
+            last_trading_date = df.index[-1].date()
+            if last_trading_date < today:
+                print(f"[スキップ] 本日（{today}）は市場休場日です（最終取引日: {last_trading_date}）。")
+                return False
+    except Exception as e:
+        print(f"[警告] 市場カレンダー確認中にエラー: {e}。処理を続行します。")
+
+    return True
+
 
 # ─── 設定読み込み ─────────────────────────────────────────────────
 def load_config():
@@ -83,14 +168,13 @@ def fetch_indicators(ticker):
         try:
             df = yf.download(ticker, period="6mo", progress=False, auto_adjust=True)
             if not df.empty:
-                info = yf.Ticker(ticker).info
+                info     = yf.Ticker(ticker).info
                 name_raw = info.get("longName") or info.get("shortName") or ticker
-                # 日本株は英語名になりがちなので日本語名を優先取得
-                name = info.get("longNameJa") or info.get("shortNameJa") or name_raw
-                close  = df["Close"].squeeze()
-                high   = df["High"].squeeze()
-                low    = df["Low"].squeeze()
-                volume = df["Volume"].squeeze()
+                name     = info.get("longNameJa") or info.get("shortNameJa") or name_raw
+                close    = df["Close"].squeeze()
+                high     = df["High"].squeeze()
+                low      = df["Low"].squeeze()
+                volume   = df["Volume"].squeeze()
                 price      = float(close.iloc[-1])
                 prev_price = float(close.iloc[-2])
                 bb_upper, bb_mid, bb_lower = calc_bollinger(close)
@@ -113,7 +197,7 @@ def fetch_indicators(ticker):
                     "bb_mid":     bb_mid,
                     "bb_lower":   bb_lower,
                     "atr":        atr,
-                    "atr_pct":    atr / price * 100,  # 株価に対するATR%
+                    "atr_pct":    atr / price * 100,
                     "volume":     float(volume.iloc[-1]),
                     "volume_ma5": float(volume.rolling(5).mean().iloc[-1]),
                 }
@@ -125,22 +209,9 @@ def fetch_indicators(ticker):
 
 # ─── Claude 観察レポート生成 ──────────────────────────────────────
 def generate_report(client, ind, prev_data):
-    """
-    prev_data には前日の indicators + predictions が入っている想定。
-    {
-      "ind": { ...前日指標... },
-      "predictions": {
-        "bullish_price": 5820,
-        "neutral_range": "5680〜5780",
-        "bearish_price": 5600,
-        "scenario": "上昇"
-      }
-    }
-    """
     prev_ind  = prev_data.get("ind")  if prev_data else None
     prev_pred = prev_data.get("predictions") if prev_data else None
 
-    # 前日からの変化テキスト
     if prev_ind:
         diff_text = f"""
 【前日からの変化】
@@ -153,23 +224,13 @@ def generate_report(client, ind, prev_data):
     else:
         diff_text = "【前日データ】初回観察のため比較なし"
 
-    # 昨日の予測答え合わせテキスト
     if prev_pred:
-        actual_price = ind["price"]
-        bull = prev_pred.get("bullish_price", 0)
-        bear = prev_pred.get("bearish_price", 0)
-        neutral_range = prev_pred.get("neutral_range", "")
+        bull             = prev_pred.get("bullish_price", 0)
+        bear             = prev_pred.get("bearish_price", 0)
+        neutral_range    = prev_pred.get("neutral_range", "")
         predicted_scenario = prev_pred.get("scenario", "")
-
-        if ind["change_pct"] >= 0.5:
-            actual_scenario = "上昇"
-        elif ind["change_pct"] <= -0.5:
-            actual_scenario = "下落"
-        else:
-            actual_scenario = "横ばい"
-
+        actual_scenario  = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
         hit = "的中" if predicted_scenario == actual_scenario else "外れ"
-
         answer_text = f"""
 【昨日の予測答え合わせ】
 ・予測シナリオ（最有力）: {predicted_scenario}
@@ -255,40 +316,34 @@ def generate_report(client, ind, prev_data):
 
 # ─── レスポンスパース ─────────────────────────────────────────────
 def parse_report(raw_text):
-    """Claude出力から各セクションを抽出"""
     result = {
         "comment": "",
-        "review": "",
-        "score": None,
+        "review":  "",
+        "score":   None,
         "predictions": {
             "bullish_price": None,
             "neutral_range": None,
             "bearish_price": None,
-            "scenario": None,
+            "scenario":      None,
         },
     }
 
-    lines = raw_text.splitlines()
+    lines           = raw_text.splitlines()
     current_section = None
 
     for line in lines:
         stripped = line.strip()
 
         if "---AI観察コメント---" in stripped:
-            current_section = "comment"
-            continue
+            current_section = "comment"; continue
         elif "---昨日の予測を振り返って---" in stripped:
-            current_section = "review"
-            continue
+            current_section = "review";  continue
         elif "---AI強気スコア---" in stripped:
-            current_section = "score"
-            continue
+            current_section = "score";   continue
         elif "---明日の予測---" in stripped:
-            current_section = "pred"
-            continue
+            current_section = "pred";    continue
         elif "---セクション終わり---" in stripped:
-            current_section = None
-            continue
+            current_section = None;      continue
 
         if current_section == "comment" and stripped:
             result["comment"] += stripped + " "
@@ -327,15 +382,14 @@ def parse_report(raw_text):
     result["review"]  = result["review"].strip()
     return result
 
-# ─── 累計勝敗を previous.json から集計 ───────────────────────────
+# ─── 累計勝敗集計 ────────────────────────────────────────────────
 def calc_cumulative_record(ticker, previous, current_hit):
     """
     previous.json の cumulative フィールドから累計勝敗を取得・更新する。
     current_hit: True=的中 / False=外れ / None=初回（集計しない）
-    戻り値: (勝数, 敗数) ※更新後の値
     """
     prev = previous.get(ticker, {})
-    cum  = prev.get("cumulative", {"win": 0, "lose": 0})
+    cum  = dict(prev.get("cumulative", {"win": 0, "lose": 0}))  # コピーして加算
     if current_hit is True:
         cum["win"] += 1
     elif current_hit is False:
@@ -345,23 +399,8 @@ def calc_cumulative_record(ticker, previous, current_hit):
 # ─── note投稿用テキスト生成 ───────────────────────────────────────
 def build_note_text(date_str, results, previous):
     today = datetime.date.today()
-
-    # 本日の的中率集計
-    hit_count   = 0
-    total_count = 0
-    for r in results:
-        ticker = r["ind"]["ticker"]
-        prev   = previous.get(ticker, {})
-        pred   = prev.get("predictions") if prev else None
-        if pred and pred.get("scenario"):
-            total_count += 1
-            actual = "上昇" if r["ind"]["change_pct"] >= 0.5 else ("下落" if r["ind"]["change_pct"] <= -0.5 else "横ばい")
-            if pred["scenario"] == actual:
-                hit_count += 1
-
     lines = []
 
-    # タイトル候補
     lines.append("【noteタイトル候補】")
     lines.append(f"AI予測は本当に当たるのか？固定2銘柄を毎日検証【{date_str}】")
     lines.append("")
@@ -370,34 +409,28 @@ def build_note_text(date_str, results, previous):
     lines.append("=" * 50)
     lines.append("")
 
-    # リード文（固定）
-    lines.append("本日も継続観察中の2銘柄をAIでテクニカル分析しました。前日予測の結果と合わせて確認しながら、AIの市場分析精度を日々検証しています。")
+    lines.append("本日も継続観察中の2銘柄をAIで分析しました。前日予測の結果と合わせて確認しながら、AIの市場分析精度を日々検証しています。")
     lines.append("")
-    lines.append(f"対象銘柄：" + "・".join([r["ind"]["name"] for r in results]))
+    lines.append("対象銘柄：" + "・".join([r["ind"]["name"] for r in results]))
     lines.append("")
 
-    # 各銘柄
     for r in results:
-        ind     = r["ind"]
-        parsed  = r["parsed"]
-        ticker  = ind["ticker"]
-        prev    = previous.get(ticker, {})
-        pred    = prev.get("predictions") if prev else None
+        ind    = r["ind"]
+        parsed = r["parsed"]
+        ticker = ind["ticker"]
+        prev   = previous.get(ticker, {})
+        pred   = prev.get("predictions") if prev else None
 
         change_sign = "▲" if ind["change_pct"] >= 0 else "▼"
         change_abs  = abs(ind["change_pct"])
         vol_ratio   = ind["volume"] / ind["volume_ma5"] * 100
+        actual      = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
 
-        # 本日の的中判定
         if pred and pred.get("scenario"):
-            actual     = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
-            is_hit     = pred["scenario"] == actual
-            current_hit = is_hit
+            current_hit = pred["scenario"] == actual
         else:
-            actual      = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
             current_hit = None
 
-        # 累計勝敗（今日の結果を加算）
         cum_win, cum_lose = calc_cumulative_record(ticker, previous, current_hit)
         cum_total = cum_win + cum_lose
         cum_rate  = f"{int(cum_win/cum_total*100)}%" if cum_total > 0 else "―"
@@ -406,7 +439,6 @@ def build_note_text(date_str, results, previous):
         lines.append(f"■ {ind['name']}（{ind['ticker']}）")
         lines.append("")
 
-        # 主要指標：縦並び・頭揃え
         lines.append("【本日の主要指標】")
         lines.append(f"現在値　：{ind['price']:,.0f}円（{change_sign}{change_abs:.2f}%）")
         lines.append(f"RSI　　 ：{ind['rsi']:.1f}")
@@ -417,37 +449,28 @@ def build_note_text(date_str, results, previous):
         lines.append(f"出来高　：{ind['volume']:,.0f}（5日平均比 {vol_ratio:.0f}%）")
         lines.append("")
 
-        # AI観察コメント
         lines.append("【AI観察コメント】")
         lines.append(parsed["comment"] if parsed["comment"] else "（取得できませんでした）")
         lines.append("")
 
-        # AI強気スコア
         score = parsed["score"]
         if score is not None:
-            if score >= 70:
-                score_label = "強気"
-            elif score >= 50:
-                score_label = "中立"
-            else:
-                score_label = "弱気"
-            score_str = f"{score}点 / 100点（{score_label}）"
+            score_label = "強気" if score >= 70 else ("中立" if score >= 50 else "弱気")
+            score_str   = f"{score}点 / 100点（{score_label}）"
         else:
             score_str = "―"
         lines.append(f"AI強気スコア：{score_str}")
         lines.append("※トレンド・MACD・RSI・出来高・BBを採点した総合スコアです")
         lines.append("")
 
-        # 昨日の予測答え合わせ
         if pred and pred.get("scenario"):
-            hit    = "✅ 的中" if current_hit else "❌ 外れ"
+            hit = "✅ 的中" if current_hit else "❌ 外れ"
             lines.append("【昨日の予測答え合わせ】")
             lines.append(f"昨日の予測：{pred['scenario']}　実際：{actual}　→ {hit}")
             if parsed["review"]:
                 lines.append(f"振り返り：{parsed['review']}")
             lines.append("")
 
-        # 明日の予測
         p = parsed["predictions"]
         if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
             lines.append("【明日の予測シナリオ】")
@@ -459,11 +482,9 @@ def build_note_text(date_str, results, previous):
                 lines.append(f"下落　　：{p['bearish_price']:,}円")
             lines.append("")
 
-        # 企業ごとの総括（累計勝敗追加）
         lines.append("【総括】")
         if pred and pred.get("scenario"):
-            hit_str = "✅ 的中" if current_hit else "❌ 外れ"
-            lines.append(f"予測答え合わせ：{hit_str}")
+            lines.append(f"予測答え合わせ：{'✅ 的中' if current_hit else '❌ 外れ'}")
         if parsed["score"] is not None:
             s = parsed["score"]
             score_comment = "強気継続" if s >= 70 else ("中立圏" if s >= 50 else "弱気圏")
@@ -471,7 +492,6 @@ def build_note_text(date_str, results, previous):
         lines.append(f"累計成績　　：{cum_win}勝{cum_lose}敗（的中率 {cum_rate}）")
         lines.append("")
 
-    # 全体免責＆ハッシュタグ
     lines.append("━" * 30)
     lines.append("※本記事はAIによる市場観察記録であり、投資助言を目的とするものではありません。")
     lines.append("")
@@ -492,23 +512,18 @@ def build_report_html(date_str, results, previous):
         change_class = "up" if ind["change_pct"] >= 0 else "down"
         change_sign  = "+" if ind["change_pct"] >= 0 else ""
         vol_ratio    = ind["volume"] / ind["volume_ma5"] * 100
+        actual       = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
 
-        # 本日の的中判定
         if pred and pred.get("scenario"):
-            actual     = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
-            is_hit     = pred["scenario"] == actual
-            current_hit = is_hit
+            current_hit = pred["scenario"] == actual
         else:
             current_hit = None
 
-        # 累計勝敗
         cum_win, cum_lose = calc_cumulative_record(ticker, previous, current_hit)
         cum_total = cum_win + cum_lose
         cum_rate  = f"{int(cum_win/cum_total*100)}%" if cum_total > 0 else "―"
 
-        # 答え合わせHTML
         if pred and pred.get("scenario"):
-            actual  = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
             hit_cls = "hit" if current_hit else "miss"
             hit_str = "✅ 的中" if current_hit else "❌ 外れ"
             review_html = f'<p class="review">{parsed["review"]}</p>' if parsed["review"] else ""
@@ -522,7 +537,6 @@ def build_report_html(date_str, results, previous):
         else:
             answer_html = ""
 
-        # 予測HTML
         p = parsed["predictions"]
         pred_html = ""
         if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
@@ -579,7 +593,7 @@ def build_report_html(date_str, results, previous):
     :root {{
       --bg: #0d1117; --surface: #161b22; --border: #30363d;
       --text: #e6edf3; --muted: #8b949e; --up: #3fb950;
-      --down: #f85149; --accent: #58a6ff; --hit: #3fb950; --miss: #f85149;
+      --down: #f85149; --accent: #58a6ff;
     }}
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{ background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; padding: 2rem 1rem; }}
@@ -639,6 +653,7 @@ def build_report_html(date_str, results, previous):
 </html>"""
     return html
 
+
 def build_index_html(report_files):
     items = ""
     for fname, date_str in report_files:
@@ -677,6 +692,11 @@ def build_index_html(report_files):
 
 # ─── メイン ───────────────────────────────────────────────────────
 def main():
+    # ── 市場開場チェック（土日・祝日はここで終了）──────────────────
+    if not is_market_open_today():
+        print("本日は市場休場のため処理を終了します。")
+        sys.exit(0)
+
     config  = load_config()
     tickers = config["tickers"]
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -707,15 +727,12 @@ def main():
         # 本日の的中判定（累計用）
         prev_pred = prev_data.get("predictions") if prev_data else None
         if prev_pred and prev_pred.get("scenario"):
-            actual     = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
+            actual      = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
             current_hit = prev_pred["scenario"] == actual
         else:
             current_hit = None
 
-        # 累計勝敗を更新して new_prev に保存
         cum_win, cum_lose = calc_cumulative_record(ticker, previous, current_hit)
-        prev_cum = previous.get(ticker, {}).get("cumulative", {"win": 0, "lose": 0})
-        # calc_cumulative_record は加算済みの値を返すので、そのまま保存
         new_prev[ticker] = {
             "ind":         ind,
             "predictions": parsed["predictions"],
@@ -725,14 +742,14 @@ def main():
         results.append({"ind": ind, "report": raw_report, "parsed": parsed})
         time.sleep(1)
 
-    # 今日のレポートHTML（GitHub Pages用）
+    # レポートHTML保存
     report_html = build_report_html(date_str, results, previous)
     report_path = REPORT_DIR / fname
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(report_html)
     print(f"レポートHTML保存: {report_path}")
 
-    # note投稿用テキスト
+    # note投稿用テキスト保存
     note_text = build_note_text(date_str, results, previous)
     note_path = NOTE_DIR / f"{today.strftime('%Y-%m-%d')}.txt"
     with open(note_path, "w", encoding="utf-8") as f:
