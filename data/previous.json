@@ -17,14 +17,20 @@
       "bb_upper": 5693.251320085581,
       "bb_mid": 5356.55,
       "bb_lower": 5019.848679914419,
+      "atr": 110.5,
+      "atr_pct": 2.0939927989387908,
       "volume": 5258600.0,
       "volume_ma5": 4477560.0
     },
     "predictions": {
-      "bullish_price": 5320,
-      "neutral_range": "5,250〜5,300",
-      "bearish_price": 5200,
+      "bullish_price": 5390,
+      "neutral_range": "5,230〜5,320",
+      "bearish_price": 5170,
       "scenario": "横ばい"
+    },
+    "cumulative": {
+      "win": 1,
+      "lose": 0
     }
   },
   "9984.T": {
@@ -45,42 +51,20 @@
       "bb_upper": 6692.245472935498,
       "bb_mid": 5441.35,
       "bb_lower": 4190.454527064503,
+      "atr": 459.85714285714283,
+      "atr_pct": 8.004475941812755,
       "volume": 69924000.0,
       "volume_ma5": 65344760.0
     },
     "predictions": {
-      "bullish_price": 5880,
-      "neutral_range": "5,680〜5,800",
-      "bearish_price": 5580,
+      "bullish_price": 6050,
+      "neutral_range": "5,600〜5,900",
+      "bearish_price": 5350,
       "scenario": "横ばい"
-    }
-  },
-  "6758.T": {
-    "ind": {
-      "ticker": "6758.T",
-      "name": "Sony Group Corporation",
-      "price": 3576.0,
-      "prev_price": 3444.0,
-      "change_pct": 3.8327526132404177,
-      "ma5": 3507.2,
-      "ma25": 3322.32,
-      "ma75": 3369.7411263020836,
-      "rsi": 59.185303514377,
-      "macd": 41.606243823436216,
-      "macd_sig": -1.5896854058487584,
-      "macd_hist": 43.19592922928497,
-      "macd_prev": 37.5966747796788,
-      "bb_upper": 3626.77122305431,
-      "bb_mid": 3320.4,
-      "bb_lower": 3014.02877694569,
-      "volume": 31904000.0,
-      "volume_ma5": 43957160.0
     },
-    "predictions": {
-      "bullish_price": 3630,
-      "neutral_range": "3,560〜3,600",
-      "bearish_price": 3520,
-      "scenario": "横ばい"
+    "cumulative": {
+      "win": 1,
+      "lose": 0
     }
   }
 }
