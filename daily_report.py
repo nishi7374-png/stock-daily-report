@@ -409,7 +409,7 @@ def build_note_text(date_str, results, previous):
     lines.append("=" * 50)
     lines.append("")
 
-    lines.append("本日も継続観察中の2銘柄をAIで分析しました。前日予測の結果と合わせて確認しながら、AIの市場分析精度を日々検証しています。")
+    lines.append("本日も継続観察中の2銘柄をAIでテクニカル分析しました。前日予測の結果と合わせて確認しながら、チャート指標を中心にAIの市場分析精度を日々検証していま")
     lines.append("")
     lines.append("対象銘柄：" + "・".join([r["ind"]["name"] for r in results]))
     lines.append("")
