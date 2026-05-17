@@ -74,7 +74,9 @@ def fetch_indicators(ticker):
             df = yf.download(ticker, period="6mo", progress=False, auto_adjust=True)
             if not df.empty:
                 info = yf.Ticker(ticker).info
-                name = info.get("longName") or info.get("shortName") or ticker
+                name_raw = info.get("longName") or info.get("shortName") or ticker
+                # 日本株は英語名になりがちなので日本語名を優先取得
+                name = info.get("longNameJa") or info.get("shortNameJa") or name_raw
                 close  = df["Close"].squeeze()
                 volume = df["Volume"].squeeze()
                 price      = float(close.iloc[-1])
@@ -360,7 +362,6 @@ def build_note_text(date_str, results, previous):
         lines.append("━" * 30)
         lines.append(f"■ {ind['name']}（{ind['ticker']}）")
         lines.append("")
-        lines.append("")
 
         # 主要指標：縦並び・頭揃え
         lines.append("【本日の主要指標】")
@@ -371,12 +372,10 @@ def build_note_text(date_str, results, previous):
         lines.append(f"MACD　　：{ind['macd_hist']:.3f}")
         lines.append(f"出来高　：{ind['volume']:,.0f}（5日平均比 {vol_ratio:.0f}%）")
         lines.append("")
-        lines.append("")
 
         # AI観察コメント
         lines.append("【AI観察コメント】")
         lines.append(parsed["comment"] if parsed["comment"] else "（取得できませんでした）")
-        lines.append("")
         lines.append("")
 
         # AI強気スコア
@@ -394,7 +393,6 @@ def build_note_text(date_str, results, previous):
         lines.append(f"AI強気スコア：{score_str}")
         lines.append("※トレンド・MACD・RSI・出来高・BBを採点した総合スコアです")
         lines.append("")
-        lines.append("")
 
         # 昨日の予測答え合わせ
         if pred and pred.get("scenario"):
@@ -405,9 +403,8 @@ def build_note_text(date_str, results, previous):
             if parsed["review"]:
                 lines.append(f"振り返り：{parsed['review']}")
             lines.append("")
-            lines.append("")
 
-        # 明日の予測（行間詰め）
+        # 明日の予測
         p = parsed["predictions"]
         if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
             lines.append("【明日の予測シナリオ】")
@@ -418,7 +415,6 @@ def build_note_text(date_str, results, previous):
             if p["bearish_price"]:
                 lines.append(f"下落　　：{p['bearish_price']:,}円")
             lines.append("")
-            lines.append("")
 
         # 企業ごとの総括
         lines.append("【総括】")
@@ -426,17 +422,10 @@ def build_note_text(date_str, results, previous):
         if pred and pred.get("scenario"):
             hit_str = "✅ 的中" if pred["scenario"] == actual else "❌ 外れ"
             lines.append(f"予測答え合わせ：{hit_str}")
-        score_comment = ""
         if parsed["score"] is not None:
             s = parsed["score"]
-            if s >= 70:
-                score_comment = "強気継続"
-            elif s >= 50:
-                score_comment = "中立圏"
-            else:
-                score_comment = "弱気圏"
+            score_comment = "強気継続" if s >= 70 else ("中立圏" if s >= 50 else "弱気圏")
             lines.append(f"強気スコア {s}点（{score_comment}）・本日{actual}")
-        lines.append("")
         lines.append("")
 
     # 全体免責＆ハッシュタグ
