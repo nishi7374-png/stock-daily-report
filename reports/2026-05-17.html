@@ -9,7 +9,7 @@
     :root {
       --bg: #0d1117; --surface: #161b22; --border: #30363d;
       --text: #e6edf3; --muted: #8b949e; --up: #3fb950;
-      --down: #f85149; --accent: #58a6ff;
+      --down: #f85149; --accent: #58a6ff; --hit: #3fb950; --miss: #f85149;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; padding: 2rem 1rem; }
@@ -24,12 +24,29 @@
     .price { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 600; }
     .change { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; margin-left: 0.6rem; font-weight: 600; }
     .change.up { color: var(--up); } .change.down { color: var(--down); }
-    .metrics { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
-    .metric { flex: 1; padding: 0.8rem 1rem; border-right: 1px solid var(--border); text-align: center; }
+    .metrics { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .metric { flex: 1; min-width: 80px; padding: 0.8rem 1rem; border-right: 1px solid var(--border); text-align: center; }
     .metric:last-child { border-right: none; }
     .metric .label { display: block; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 0.3rem; }
     .metric .value { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; }
-    .report-body { padding: 1.5rem; line-height: 1.9; font-size: 0.92rem; color: #cdd9e5; white-space: pre-wrap; }
+    .report-body { padding: 1.5rem; font-size: 0.92rem; color: #cdd9e5; }
+    .score-badge { display: inline-block; background: #21262d; border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.8rem; }
+    .score-badge strong { color: var(--accent); font-size: 1.05rem; }
+    .comment { line-height: 1.8; margin-bottom: 1rem; }
+    .answer-box { border-radius: 6px; padding: 0.8rem 1rem; margin-bottom: 1rem; }
+    .answer-box.hit { background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); }
+    .answer-box.miss { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); }
+    .answer-label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .answer-result { font-size: 1rem; font-weight: 600; margin-right: 0.8rem; }
+    .answer-detail { font-size: 0.85rem; color: var(--muted); }
+    .review { font-size: 0.85rem; color: #adbac7; margin-top: 0.5rem; line-height: 1.7; }
+    .pred-box { background: #21262d; border-radius: 6px; padding: 0.8rem 1rem; }
+    .pred-label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .pred-scenarios { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .scenario { font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+    .up-s { background: rgba(63,185,80,0.15); color: var(--up); }
+    .neu-s { background: rgba(88,166,255,0.15); color: var(--accent); }
+    .down-s { background: rgba(248,81,73,0.15); color: var(--down); }
     footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
@@ -55,11 +72,25 @@
           </div>
           <div class="metrics">
             <div class="metric"><span class="label">RSI</span><span class="value">36.1</span></div>
-            <div class="metric"><span class="label">MA5</span><span class="value">5,211.00</span></div>
-            <div class="metric"><span class="label">MA25</span><span class="value">5,436.28</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">5,211</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">5,436</span></div>
             <div class="metric"><span class="label">MACDヒスト</span><span class="value">-2.326</span></div>
+            <div class="metric"><span class="label">出来高比</span><span class="value">117%</span></div>
           </div>
-          <div class="report-body"># 武田薬品工業（4502.T）市場観察レポート<br><br>**観察日時**: 2024年（最新取引日）  <br>**現在値**: 5,277円（前日比 +0.40%）<br><br>---<br><br>## 1. 総合観察<br><br>**🔴 下落傾向（弱）- ⚪ 横ばいへの移行模索**<br><br>現在の株価は短期的には反発の動きを見せているものの、中期的な下降トレンドの中にあります。MA25（5,436円）およびMA75（5,498円）を下回っており、全体的には軟調な地合いが続いています。ただし、直近の小幅上昇と出来高増加は、下げ止まりの可能性を示唆しています。<br><br>---<br><br>## 2. 各指標の観察<br><br>### **移動平均線の配置**<br>- MA5（5,211円）を約66円上回り、短期的には上方に位置<br>- MA25（5,436円）を約159円下回り、中期的には下方に乖離<br>- MA75（5,498円）を約222円下回り、長期的にも下方に位置<br>- デッドクロス状態が継続中（短期＜中期＜長期の逆配列）<br><br>### **モメンタム指標**<br>- **RSI(14): 36.1** - 売られ過ぎ水準（30）に近く、過熱感は低い<br>- **MACD**: ヒストグラムが-2.326と依然マイナス圏だが、前日の-11.310から大幅改善<br>- MACDラインとシグナルの差は縮小傾向<br><br>### **ボリンジャーバンド**<br>- 中央線（5,356円）を若干下回る位置で推移<br>- 下限（5,019円）からは約258円上方で、底値圏からは脱却<br>- 上限（5,693円）まで約416円の余地<br><br>### **出来高**<br>- 直近: 5,258,600株<br>- 5日平均: 4,477,560株<br>- **平均比で約+17.4%増**、市場参加者の関心が高まっている様子<br><br>---<br><br>## 3. 前日からの変化<br><br>### **株価の動き**<br>- 小幅ながら+0.40%の上昇を記録<br>- 5,200円台後半での推移を維持<br><br>### **テクニカル面の変化**<br>- **MACDヒストグラムが顕著に改善**: -11.310 → -2.326（約80%改善）<br>- この変化は売り圧力の減退を示唆<br>- RSIは36.1で横ばい、底打ち感を探る水準<br><br>### **出来高の動向**<br>- 5日平均を大きく上回る水準で取引が成立<br>- 価格の小幅上昇に対して出来高が伴っている点は注目に値する<br><br>---<br><br>## 4. 今日の注目ポイント<br><br>### **重要な価格水準**<br>- **上方**: MA5（5,211円）との位置関係維持、さらにMA25（5,436円）が次の抵抗帯<br>- **下方**: 心理的節目の5,200円、ボリンジャー下限5,019円<br><br>### **MACDの収束動向**<br>- ヒストグラムの急改善が一時的なものか、トレンド転換の兆候か<br>- ゼロライン</div>
+          <div class="report-body">
+            <div class="score-badge">AI強気スコア <strong>42点</strong></div>
+            <p class="comment">現在値は5,277円で前日比+0.40%と小幅上昇。MA5を上回るもMA25・MA75は依然下回る位置。RSI36.1と売られ過ぎ水準に近く、MACD差分は縮小傾向を示す。出来高は5日平均比117%と増加しており、下落トレンドからの転換点を探る動きが見られる。ボリンジャーバンド中央線との乖離は縮小中。</p>
+            
+            
+          <div class="pred-box">
+            <span class="pred-label">明日の予測シナリオ</span>
+            <div class="pred-scenarios">
+              <span class="scenario up-s">上昇 5,320円</span>
+              <span class="scenario neu-s">横ばい 5,240〜5,300円</span>
+              <span class="scenario down-s">下落 5,210円</span>
+            </div>
+          </div>
+          </div>
         </div>
 
         <div class="card">
@@ -75,11 +106,25 @@
           </div>
           <div class="metrics">
             <div class="metric"><span class="label">RSI</span><span class="value">57.1</span></div>
-            <div class="metric"><span class="label">MA5</span><span class="value">5,851.40</span></div>
-            <div class="metric"><span class="label">MA25</span><span class="value">5,101.24</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">5,851</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">5,101</span></div>
             <div class="metric"><span class="label">MACDヒスト</span><span class="value">-18.268</span></div>
+            <div class="metric"><span class="label">出来高比</span><span class="value">107%</span></div>
           </div>
-          <div class="report-body"># 9984.T SoftBank Group Corp. 株価観察記録<br><br>**観察日時**: 本日<br>**現在値**: 5,745円（前日比 -0.43%）<br><br>---<br><br>## 1. 総合観察<br><br>**🟢 上昇傾向（弱〜中）**<br><br>中期的な上昇トレンドは維持されているものの、短期的には調整局面に入りつつある状況が観察されます。現在値は主要な移動平均線のうち、MA25とMA75を上回っているものの、直近5日間の平均を下回っており、短期的な勢いの鈍化が見られます。<br><br>---<br><br>## 2. 各指標の観察<br><br>**移動平均線の状況**<br>- MA5（5,851円）を約106円（1.8%）下回る位置<br>- MA25（5,101円）を約644円（12.6%）上回る位置<br>- MA75（4,358円）を約1,387円（31.8%）上回る位置<br>- 中長期では上昇基調を維持しているが、短期では軟調<br><br>**モメンタム指標**<br>- RSI(14): 57.1 → 過熱・売られ過ぎいずれの領域でもない中立圏<br>- MACDヒスト: -18.268（前日+7.731から反転）→ 負の領域に転じたことで上昇モメンタムの減速が観察される<br>- MACDライン（458.738）がシグナル（477.006）を下回っている状態<br><br>**ボリンジャーバンド**<br>- 現在値は中央線（5,441円）より約304円上方<br>- バンド幅: 上限6,692円 / 下限4,190円（幅2,502円）<br>- 中央線と上限の中間付近に位置し、比較的余裕のある位置<br><br>**出来高**<br>- 直近: 69,924千株<br>- 5日平均: 65,345千株<br>- 平均を約7%上回る活発な取引が観察される<br><br>---<br><br>## 3. 前日からの変化<br><br>- **株価**: わずか0.43%の下落と小幅な調整<br>- **MACDヒストグラム**: +7.731から-18.268へ大きく反転し、上昇勢いの明確な減速シグナル<br>- **出来高**: 平均を上回る水準を維持しており、この価格帯での売買参加者は多い状態<br>- **RSI**: 57.1と変化なく、方向感の定まらない膠着状態を示唆<br><br>直近の動きとしては、株価の下落幅は限定的であるものの、MACDヒストグラムの急速な悪化が目立ちます。これは短期的な上昇モメンタムが失速していることを示しています。<br><br>---<br><br>## 4. 今日の注目ポイント<br><br>1. **MA5（5,851円）との位置関係**: 現在106円下方にあり、この水準を回復できるかが短期的な方向性を判断する鍵<br><br>2. **MACDのデッドクロス状態**: MACDラインがシグナルを下抜けた状態が継続するか、早期に反転するかを観察<br><br>3. **5,441円の中央線サポート**: ボリンジャーバンドの中央線（MA20相当）が下値の目安となる水準<br><br>4. **出来高の推移**: 平均</div>
+          <div class="report-body">
+            <div class="score-badge">AI強気スコア <strong>52点</strong></div>
+            <p class="comment">現在値5,745円は5日移動平均を下回り、MACDヒストグラムが前日の+7.731から-18.268へ大きく反転した。出来高は5日平均比107%とやや増加。ボリンジャーバンドの中央付近に位置し、RSI57.1は中立圏内。25日・75日移動平均は上回っているものの、短期的な勢いには陰りが見られる状態。</p>
+            
+            
+          <div class="pred-box">
+            <span class="pred-label">明日の予測シナリオ</span>
+            <div class="pred-scenarios">
+              <span class="scenario up-s">上昇 5,900円</span>
+              <span class="scenario neu-s">横ばい 5,680〜5,820円</span>
+              <span class="scenario down-s">下落 5,580円</span>
+            </div>
+          </div>
+          </div>
         </div>
 
         <div class="card">
@@ -95,11 +140,25 @@
           </div>
           <div class="metrics">
             <div class="metric"><span class="label">RSI</span><span class="value">59.2</span></div>
-            <div class="metric"><span class="label">MA5</span><span class="value">3,507.20</span></div>
-            <div class="metric"><span class="label">MA25</span><span class="value">3,322.32</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">3,507</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">3,322</span></div>
             <div class="metric"><span class="label">MACDヒスト</span><span class="value">43.196</span></div>
+            <div class="metric"><span class="label">出来高比</span><span class="value">73%</span></div>
           </div>
-          <div class="report-body"># 6758.T Sony Group Corporation 観察レポート<br><br>**観察日時点**: 現在値 3,576.00円（前日比 +3.83%）<br><br>---<br><br>## 1. 総合観察<br><br>**🟢 上昇傾向（強度：中）**<br><br>主要な移動平均線をすべて上回り、前日比+3.83%の上昇を記録。MACDはゴールデンクロスの状態を維持し、勢いの継続が観察される。ただし、ボリンジャーバンド上限に接近しており、短期的な過熱感も散見される。<br><br>---<br><br>## 2. 各指標の観察<br><br>**移動平均線の配置**<br>- 現在値（3,576円）は全ての移動平均線を上回る位置<br>- MA5（3,507円）との乖離：+1.97%<br>- MA25（3,322円）との乖離：+7.64%<br>- MA75（3,369円）との乖離：+6.13%<br>- 短期線が中長期線を上回るポジティブな配列<br><br>**モメンタム指標**<br>- RSI(14)：59.2 - 中立圏からやや強気圏内、過熱感は限定的<br>- MACDライン：41.606（プラス圏で推移）<br>- シグナル：-1.590（依然マイナス圏）<br>- ヒストグラム：43.196（前日37.597から拡大、上昇モメンタムの加速を示唆）<br><br>**ボリンジャーバンド**<br>- 上限：3,626円（残り約+1.4%）<br>- 中央：3,320円（+7.71%上方）<br>- 下限：3,014円<br>- 現在値は+2σ付近に位置し、バンド上限接近<br><br>**出来高**<br>- 直近出来高：31,904,000株<br>- 5日平均：43,957,160株<br>- 平均比：約72.5%（通常より低水準）<br><br>---<br><br>## 3. 前日からの変化<br><br>- **株価の動き**: +3.83%の明確な上昇を記録し、3,500円台後半へ到達<br>- **MACDヒストグラム**: 37.597→43.196へ拡大（+14.9%）、上昇の勢いが強まっている様子<br>- **出来高の特徴**: 5日平均を大きく下回る水準で推移。大きな商いを伴わない上昇<br>- **RSI**: 59.2で変化なし、過熱感は抑制された範囲内<br><br>---<br><br>## 4. 今日の注目ポイント<br><br>🔍 **ボリンジャーバンド上限（3,626円）への接近**<br>- 残り約50円（+1.4%）で上限到達<br>- バンドウォークの可能性と反発の可能性、両面の観察が必要<br><br>🔍 **出来高の低さ**<br>- 5日平均の72.5%と商いが細い中での上昇<br>- 持続性を測る上で、今後の出来高推移が重要な観察対象<br><br>🔍 **MACDの強い拡大傾向**<br>- ヒストグラムの急拡大は勢いを示すが、反動の可能性も念頭に<br><br>🔍 **3,600円の心理的節目**<br>- 大台接近による値動きの変化に注目<br><br>---<br><br>## 5.</div>
+          <div class="report-body">
+            <div class="score-badge">AI強気スコア <strong>68点</strong></div>
+            <p class="comment">本日は前日比+3.83%と大きく上昇し3,576円で終了。MACDはゴールデンクロス状態でヒストグラムも43.196と拡大傾向。全ての移動平均線を上回り、ボリンジャーバンド上限に接近。ただし出来高は5日平均比73%と低調で、上昇の勢いに対する参加者の慎重姿勢が見られる。RSI59.2は中立域上部に位置。</p>
+            
+            
+          <div class="pred-box">
+            <span class="pred-label">明日の予測シナリオ</span>
+            <div class="pred-scenarios">
+              <span class="scenario up-s">上昇 3,640円</span>
+              <span class="scenario neu-s">横ばい 3,540〜3,610円</span>
+              <span class="scenario down-s">下落 3,490円</span>
+            </div>
+          </div>
+          </div>
         </div>
 
     <footer>
