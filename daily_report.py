@@ -33,8 +33,14 @@ def load_config():
 # ─── 前日データ ───────────────────────────────────────────────────
 def load_previous():
     if PREV_FILE.exists():
-        with open(PREV_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(PREV_FILE, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if not content:
+                    return {}
+                return json.loads(content)
+        except Exception:
+            return {}
     return {}
 
 def save_previous(data):
