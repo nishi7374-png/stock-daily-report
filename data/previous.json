@@ -24,13 +24,13 @@
     },
     "predictions": {
       "bullish_price": 5355,
-      "neutral_range": "5,145〜5,350",
+      "neutral_range": "5,145〜5,320",
       "bearish_price": 5145,
       "scenario": "横ばい"
     },
     "cumulative": {
       "win": 2,
-      "lose": 1
+      "lose": 2
     }
   },
   "9984.T": {
@@ -58,13 +58,13 @@
     },
     "predictions": {
       "bullish_price": 6031,
-      "neutral_range": "5,400〜5,800（ボリンジャーミッド付近での揉み合い）",
+      "neutral_range": "5,400〜5,800",
       "bearish_price": 5154,
       "scenario": "横ばい"
     },
     "cumulative": {
       "win": 2,
-      "lose": 1
+      "lose": 2
     }
   }
 }
