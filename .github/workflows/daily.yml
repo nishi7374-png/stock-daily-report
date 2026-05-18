@@ -2,7 +2,7 @@ name: 毎日の株式観察レポート
 
 on:
   schedule:
-    # 日本時間 17:30 (UTC 08:30) に毎日実行 ※平日・休日関係なく動きます
+   
     - cron: '30 8 * * *'
   workflow_dispatch:  # 手動実行も可能
 
