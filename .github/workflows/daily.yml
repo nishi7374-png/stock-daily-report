@@ -1,36 +1,27 @@
 name: 毎日の株式観察レポート
-
 on:
   schedule:
-   
-    - cron: '30 8 * * *'
-  workflow_dispatch:  # 手動実行も可能
-
+    - cron: '30 8 * * 1-5'
+  workflow_dispatch:
 permissions:
-  contents: write  # レポートファイルをpushするために必要
-
+  contents: write
 jobs:
   generate-report:
     runs-on: ubuntu-latest
-
     steps:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v4
-
       - name: Python セットアップ
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: 依存ライブラリのインストール
         run: |
           pip install anthropic yfinance pandas numpy
-
       - name: レポート生成
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python daily_report.py
-
       - name: レポートをコミット＆プッシュ
         run: |
           git config --global user.name "github-actions[bot]"
