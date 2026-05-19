@@ -96,16 +96,8 @@ def is_market_open_today():
         print(f"[スキップ] 本日（{today}）は日本の祝日のため市場休場です。")
         return False
 
-    # 3) yfinanceで実際の最終取引日を確認（祝日リストに漏れがあっても補足）
-    try:
-        df = yf.download("^N225", period="5d", progress=False, auto_adjust=True)
-        if not df.empty:
-            last_trading_date = df.index[-1].date()
-            if last_trading_date < today:
-                print(f"[スキップ] 本日（{today}）は市場休場日です（最終取引日: {last_trading_date}）。")
-                return False
-    except Exception as e:
-        print(f"[警告] 市場カレンダー確認中にエラー: {e}。処理を続行します。")
+    # ※ yfinanceによる第3段階チェックは17時台にデータ反映が遅れて
+    #   誤スキップが起きるため削除。土日・祝日チェックで十分対応できます。
 
     return True
 
