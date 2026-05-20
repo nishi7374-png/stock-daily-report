@@ -1,70 +1,8 @@
 {
-  "4502.T": {
-    "ind": {
-      "ticker": "4502.T",
-      "name": "Takeda Pharmaceutical Company Limited",
-      "price": 5255.0,
-      "prev_price": 5249.0,
-      "change_pct": 0.1143074871404077,
-      "ma5": 5245.8,
-      "ma25": 5392.96,
-      "ma75": 5505.058873697917,
-      "rsi": 43.77049180327869,
-      "macd": -94.77776457344135,
-      "macd_sig": -101.6372732886911,
-      "macd_hist": 6.85950871524976,
-      "macd_prev": 2.5902907643820896,
-      "bb_upper": 5602.526075461935,
-      "bb_mid": 5318.85,
-      "bb_lower": 5035.173924538066,
-      "atr": 106.21428571428571,
-      "atr_pct": 2.021204295229033,
-      "volume": 4414600.0,
-      "volume_ma5": 4477400.0
-    },
-    "predictions": {
-      "bullish_price": 5361,
-      "neutral_range": "5,149〜5,361",
-      "bearish_price": 5149,
-      "scenario": "横ばい"
-    },
-    "cumulative": {
-      "win": 3,
-      "lose": 2
-    }
+  "8306.T": {
+    "day_count": 0
   },
-  "9984.T": {
-    "ind": {
-      "ticker": "9984.T",
-      "name": "SoftBank Group Corp.",
-      "price": 5361.0,
-      "prev_price": 5593.0,
-      "change_pct": -4.148042195601645,
-      "ma5": 5696.2,
-      "ma25": 5243.92,
-      "ma75": 4390.336448567708,
-      "rsi": 43.525571273122964,
-      "macd": 361.854470008112,
-      "macd_sig": 444.49533549059163,
-      "macd_hist": -82.64086548247963,
-      "macd_prev": -47.67538133551102,
-      "bb_upper": 6557.0240196804025,
-      "bb_mid": 5554.75,
-      "bb_lower": 4552.4759803195975,
-      "atr": 435.64285714285717,
-      "atr_pct": 8.126149172595731,
-      "volume": 53762700.0,
-      "volume_ma5": 57609080.0
-    },
-    "predictions": {
-      "bullish_price": 5797,
-      "neutral_range": "5,140〜5,580（ATRの半分程度の変動）",
-      "bearish_price": 4925,
-      "scenario": "横ばい"
-    },
-    "cumulative": {
-      "win": 2,
-      "lose": 3
-    }
+  "6758.T": {
+    "day_count": 0
   }
 }
