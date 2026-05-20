@@ -3,76 +3,78 @@
     "ind": {
       "ticker": "8306.T",
       "name": "Mitsubishi UFJ Financial Group, Inc.",
-      "price": 3030.0,
+      "price": NaN,
       "prev_price": 3108.0,
-      "change_pct": -2.5096525096525095,
-      "ma5": 2987.8,
-      "ma25": 2873.6,
-      "ma75": 2794.8567415364582,
-      "rsi": 67.2316384180791,
-      "macd": 59.89236305872237,
-      "macd_sig": 39.46324157647901,
-      "macd_hist": 20.42912148224336,
+      "change_pct": NaN,
+      "ma5": NaN,
+      "ma25": NaN,
+      "ma75": NaN,
+      "rsi": NaN,
+      "macd": 55.14713071340657,
+      "macd_sig": 38.514195107415844,
+      "macd_hist": 16.632935605990724,
       "macd_prev": 20.791169507488405,
-      "bb_upper": 3053.888240428635,
-      "bb_mid": 2871.4,
-      "bb_lower": 2688.911759571365,
-      "atr": 86.14285714285714,
-      "atr_pct": 2.842998585572843,
+      "bb_upper": NaN,
+      "bb_mid": NaN,
+      "bb_lower": NaN,
+      "atr": NaN,
+      "atr_pct": NaN,
       "volume": 51809100.0,
       "volume_ma5": 51205760.0
     },
     "predictions": {
-      "bullish_price": 3115,
-      "neutral_range": "2,945〜3,085",
-      "bearish_price": 2900,
+      "bullish_price": 3120,
+      "neutral_range": "2,940〜3,100",
+      "bearish_price": 2880,
       "scenario": "横ばい"
     },
     "cumulative": {
-      "win": 0,
+      "win": 1,
       "lose": 0
     },
     "self_scores": [
-      -1
+      -1,
+      70
     ],
-    "day_count": 1
+    "day_count": 2
   },
   "6758.T": {
     "ind": {
       "ticker": "6758.T",
       "name": "Sony Group Corporation",
-      "price": 3606.0,
+      "price": NaN,
       "prev_price": 3720.0,
-      "change_pct": -3.064516129032258,
-      "ma5": 3588.4,
-      "ma25": 3356.24,
-      "ma75": 3372.0482486979167,
-      "rsi": 64.50437317784257,
-      "macd": 81.6555909055287,
-      "macd_sig": 34.76412931658322,
-      "macd_hist": 46.891461588945475,
+      "change_pct": NaN,
+      "ma5": NaN,
+      "ma25": NaN,
+      "ma75": NaN,
+      "rsi": NaN,
+      "macd": 75.78539548901563,
+      "macd_sig": 33.59009023328061,
+      "macd_hist": 42.195305255735015,
       "macd_prev": 52.74413156966877,
-      "bb_upper": 3752.7163746209726,
-      "bb_mid": 3365.15,
-      "bb_lower": 2977.5836253790276,
-      "atr": 171.0,
-      "atr_pct": 4.7420965058236275,
+      "bb_upper": NaN,
+      "bb_mid": NaN,
+      "bb_lower": NaN,
+      "atr": NaN,
+      "atr_pct": NaN,
       "volume": 21952200.0,
       "volume_ma5": 27943240.0
     },
     "predictions": {
       "bullish_price": 3777,
-      "neutral_range": "3,520〜3,692",
-      "bearish_price": 3435,
+      "neutral_range": "3,435〜3,692",
+      "bearish_price": 3264,
       "scenario": "横ばい"
     },
     "cumulative": {
-      "win": 0,
+      "win": 1,
       "lose": 0
     },
     "self_scores": [
-      -1
+      -1,
+      80
     ],
-    "day_count": 1
+    "day_count": 2
   }
 }
