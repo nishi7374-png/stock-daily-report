@@ -2,24 +2,13 @@
 株式定点観察レポート - 毎日自動生成スクリプト
 対象銘柄はconfig.jsonで管理
 土日・日本市場の祝日は自動スキップ
-
-変更点：
-1. 監視銘柄をUFJ(8306.T)・Sony(6758.T)に変更
-2. タイトルに【毎日銘柄〇日目】カウント追加（銘柄ごと別カウント）
-3. noteのヘッダーから「対象銘柄：」行を削除
-4. チャート画像（matplotlib）を自動生成してHTMLに埋め込み
-5. AI観察コメントの直後に明日の予測シナリオを表示
-6. 「昨日の予測答え合わせ」と「総括」を統合し最後へ移動、
-   「AI自己採点」（今日の予測精度を100点満点でAIが採点、過去平均も算出）を追加
 """
 
 import os
 import sys
 import json
 import time
-import base64
 import datetime
-from io import BytesIO
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -33,11 +22,9 @@ PREV_FILE   = BASE_DIR / "data" / "previous.json"
 REPORT_DIR  = BASE_DIR / "reports"
 NOTE_DIR    = BASE_DIR / "note"
 INDEX_FILE  = BASE_DIR / "index.html"
-CHART_DIR   = BASE_DIR / "charts"
 
 REPORT_DIR.mkdir(exist_ok=True)
 NOTE_DIR.mkdir(exist_ok=True)
-CHART_DIR.mkdir(exist_ok=True)
 (BASE_DIR / "data").mkdir(exist_ok=True)
 
 # ─── 市場開場チェック ─────────────────────────────────────────────
@@ -175,7 +162,6 @@ def fetch_indicators(ticker):
                     "atr_pct":    atr / price * 100,
                     "volume":     float(volume.iloc[-1]),
                     "volume_ma5": float(volume.rolling(5).mean().iloc[-1]),
-                    "_df":        df,   # チャート生成用（保存しない）
                 }
                 return ind
         except Exception as e:
@@ -183,127 +169,20 @@ def fetch_indicators(ticker):
         time.sleep(2)
     return None
 
-
-# ─── チャート画像生成（matplotlib） ──────────────────────────────
-def generate_chart_base64(ind):
-    """
-    ローソク足 + MA5/MA25/MA75 + 出来高 + ボリンジャーバンドを含む
-    60営業日チャートをBase64 PNGとして返す。
-    """
-    try:
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-        import matplotlib.patches as mpatches
-        from matplotlib.gridspec import GridSpec
-
-        df = ind.get("_df")
-        if df is None or df.empty:
-            return None
-
-        # 直近60日分
-        df = df.tail(60).copy()
-        close  = df["Close"].squeeze()
-        open_  = df["Open"].squeeze()
-        high   = df["High"].squeeze()
-        low    = df["Low"].squeeze()
-        volume = df["Volume"].squeeze()
-        dates  = np.arange(len(df))
-
-        ma5  = close.rolling(5).mean()
-        ma25 = close.rolling(25).mean()
-        ma75 = close.rolling(75, min_periods=1).mean()
-
-        mid = close.rolling(20).mean()
-        std = close.rolling(20).std()
-        bb_upper = mid + 2 * std
-        bb_lower = mid - 2 * std
-
-        # ── スタイル ─────────────────────────────────────
-        bg      = "#0d1117"
-        surface = "#161b22"
-        border  = "#30363d"
-        up_col  = "#3fb950"
-        dn_col  = "#f85149"
-        txt_col = "#8b949e"
-
-        fig = plt.figure(figsize=(9, 5.5), facecolor=bg)
-        gs  = GridSpec(3, 1, height_ratios=[3, 1, 0.05], hspace=0.04)
-        ax1 = fig.add_subplot(gs[0])
-        ax2 = fig.add_subplot(gs[1], sharex=ax1)
-
-        for ax in (ax1, ax2):
-            ax.set_facecolor(surface)
-            ax.tick_params(colors=txt_col, labelsize=7)
-            for spine in ax.spines.values():
-                spine.set_edgecolor(border)
-
-        # ── ローソク足 ───────────────────────────────────
-        width  = 0.5
-        for i, (o, c, h, l) in enumerate(zip(open_, close, high, low)):
-            color = up_col if c >= o else dn_col
-            ax1.bar(i, abs(c - o), bottom=min(o, c), color=color, width=width, linewidth=0)
-            ax1.plot([i, i], [l, h], color=color, linewidth=0.8)
-
-        # ── ボリンジャーバンド ────────────────────────────
-        ax1.fill_between(dates, bb_upper, bb_lower, alpha=0.06, color="#58a6ff")
-        ax1.plot(dates, bb_upper, color="#58a6ff", linewidth=0.5, alpha=0.5, linestyle="--")
-        ax1.plot(dates, bb_lower, color="#58a6ff", linewidth=0.5, alpha=0.5, linestyle="--")
-
-        # ── MA線 ─────────────────────────────────────────
-        ax1.plot(dates, ma5,  color="#ffa657", linewidth=1.0, label="MA5")
-        ax1.plot(dates, ma25, color="#79c0ff", linewidth=1.0, label="MA25")
-        ax1.plot(dates, ma75, color="#d2a8ff", linewidth=1.0, label="MA75")
-
-        # 凡例
-        ax1.legend(loc="upper left", fontsize=7,
-                   facecolor=surface, edgecolor=border,
-                   labelcolor=txt_col, framealpha=0.8)
-
-        # ── 出来高 ───────────────────────────────────────
-        vol_colors = [up_col if c >= o else dn_col
-                      for o, c in zip(open_, close)]
-        ax2.bar(dates, volume, color=vol_colors, width=width, linewidth=0, alpha=0.8)
-        ax2.yaxis.set_major_formatter(
-            matplotlib.ticker.FuncFormatter(lambda x, _: f"{x/1e6:.0f}M")
-        )
-
-        # X軸：月/日ラベルを間引いて表示
-        step = max(1, len(dates) // 8)
-        xticks = dates[::step]
-        xlabels = [df.index[i].strftime("%m/%d") for i in xticks]
-        ax2.set_xticks(xticks)
-        ax2.set_xticklabels(xlabels, fontsize=7, color=txt_col)
-        plt.setp(ax1.get_xticklabels(), visible=False)
-
-        ax1.set_xlim(-1, len(dates))
-        ax1.yaxis.set_major_formatter(
-            matplotlib.ticker.FuncFormatter(lambda x, _: f"{x:,.0f}")
-        )
-
-        # タイトル
-        ticker_name = ind["ticker"]
-        price_str   = f"{ind['price']:,.0f}円"
-        chg_str     = f"{ind['change_pct']:+.2f}%"
-        chg_col     = up_col if ind["change_pct"] >= 0 else dn_col
-        ax1.set_title(
-            f"{ticker_name}  {price_str}  ",
-            color=txt_col, fontsize=9, loc="left", pad=6
-        )
-        ax1.set_title(chg_str, color=chg_col, fontsize=9, loc="right", pad=6)
-
-        plt.tight_layout(pad=0.5)
-
-        buf = BytesIO()
-        fig.savefig(buf, format="png", dpi=130, facecolor=bg, bbox_inches="tight")
-        plt.close(fig)
-        buf.seek(0)
-        return base64.b64encode(buf.read()).decode("utf-8")
-
-    except Exception as e:
-        print(f"  チャート生成エラー: {e}")
-        return None
-
+# ─── 観察開始日管理（連続日数カウント用） ────────────────────────
+def get_observation_day(ticker, previous):
+    """previous.jsonのcumulativeにstart_dateを持たせて日数を計算"""
+    prev = previous.get(ticker, {})
+    cum  = prev.get("cumulative", {})
+    start_str = cum.get("start_date")
+    today = datetime.date.today()
+    if start_str:
+        start = datetime.date.fromisoformat(start_str)
+        # 取引日数ベースではなく暦日数ベース（シンプルに）
+        delta = (today - start).days + 1
+        return delta, start_str
+    else:
+        return 1, today.isoformat()
 
 # ─── Claude 観察レポート生成 ──────────────────────────────────────
 def generate_report(client, ind, prev_data):
@@ -319,15 +198,18 @@ def generate_report(client, ind, prev_data):
 ・ATR: {prev_ind.get('atr', 0):.2f} → {ind['atr']:.2f}（株価比 {ind['atr_pct']:.2f}%）
 ・出来高: {prev_ind['volume']:,.0f} → {ind['volume']:,.0f}（5日平均比: {ind['volume']/ind['volume_ma5']*100:.0f}%）
 """
+        prev_score = prev_data.get("score")
+        prev_score_text = f"前日の上昇期待度: {prev_score}点" if prev_score is not None else "前日スコア: なし"
     else:
         diff_text = "【前日データ】初回観察のため比較なし"
+        prev_score_text = "前日スコア: なし（初回）"
 
     if prev_pred:
-        bull              = prev_pred.get("bullish_price", 0)
-        bear              = prev_pred.get("bearish_price", 0)
-        neutral_range     = prev_pred.get("neutral_range", "")
+        bull               = prev_pred.get("bullish_price", 0)
+        bear               = prev_pred.get("bearish_price", 0)
+        neutral_range      = prev_pred.get("neutral_range", "")
         predicted_scenario = prev_pred.get("scenario", "")
-        actual_scenario   = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
+        actual_scenario    = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
         hit = "的中" if predicted_scenario == actual_scenario else "外れ"
         answer_text = f"""
 【昨日の予測答え合わせ】
@@ -352,11 +234,16 @@ def generate_report(client, ind, prev_data):
 【出来高】直近={ind['volume']:,.0f} / 5日平均={ind['volume_ma5']:,.0f}（平均比 {ind['volume']/ind['volume_ma5']*100:.0f}%）
 {diff_text}
 {answer_text}
+{prev_score_text}
 
 以下の形式で出力してください。「エントリー」「利確」「損切り」などの売買用語は使わず、観察・記録の視点で書いてください。
 
 ---AI観察コメント---
 （100〜150字で、今日の状態を一言で表す。MACDや出来高・ATRなど注目指標に触れること。ATRが高ければ値動きが荒い旨を、低ければ膠着状態を示唆する旨を含めること）
+
+---昨日の予測を振り返って---
+（前日予測がなぜ当たった／外れたかを指標の動きから考察。60〜100字）
+※初回観察の場合はこのセクションを省略してください。
 
 ---上昇期待度---
 以下の採点基準で合計点を計算し、数字のみ（0〜100の整数）を出力してください。
@@ -399,22 +286,11 @@ def generate_report(client, ind, prev_data):
 下落シナリオ: （価格）円
 最有力シナリオ: 上昇 or 横ばい or 下落
 
----昨日の予測振り返り---
-（前日予測がなぜ当たった／外れたかを指標の動きから考察。60〜100字）
-※初回観察の場合はこのセクションを省略してください。
+---note見出し---
+（その日の相場を表す10文字前後の見出しを1行で出力。句読点なし。例：膠着続く弱気の攻防）
 
----AI自己採点---
-「昨日の予測」と「今日の実際の結果」を照らし合わせ、予測の精度を100点満点で自己採点してください。
-初回観察（前日予測なし）の場合は「初回」とだけ出力してください。
-
-採点基準（初回以外）：
-・シナリオ的中（上昇/横ばい/下落の方向が合っていれば +50点ベース）
-・価格レンジの精度（実際の株価が予測レンジ内に収まっていれば +20点）
-・見落とした指標があれば減点（例：MACDの悪化を無視していた → -20点など）
-・コメントが実際の値動きと整合していれば +10点
-
-数字のみ（0〜100の整数）を1行目に出力し、
-2行目に「何が当たって何が外れたか」を40〜60字の一言コメントで出力してください。
+---AI自己採点総括---
+（前日スコアと本日スコアを比較し、「前日〇点→本日〇点」という変化の自己評価を50〜80字で記述。スコアが上昇した場合は改善要因を、下落した場合は悪化要因を客観的に述べること。）
 
 ---セクション終わり---"""
 
@@ -425,15 +301,14 @@ def generate_report(client, ind, prev_data):
     )
     return message.content[0].text
 
-
 # ─── レスポンスパース ─────────────────────────────────────────────
 def parse_report(raw_text):
     result = {
-        "comment":       "",
-        "review":        "",
-        "score":         None,
-        "self_score":    None,
-        "self_comment":  "",
+        "comment":        "",
+        "review":         "",
+        "score":          None,
+        "headline":       "",
+        "self_eval":      "",
         "predictions": {
             "bullish_price": None,
             "neutral_range": None,
@@ -450,14 +325,16 @@ def parse_report(raw_text):
 
         if "---AI観察コメント---" in stripped:
             current_section = "comment"; continue
+        elif "---昨日の予測を振り返って---" in stripped:
+            current_section = "review";  continue
         elif "---上昇期待度---" in stripped:
             current_section = "score";   continue
         elif "---明日の予測---" in stripped:
             current_section = "pred";    continue
-        elif "---昨日の予測振り返り---" in stripped:
-            current_section = "review";  continue
-        elif "---AI自己採点---" in stripped:
-            current_section = "self";    continue
+        elif "---note見出し---" in stripped:
+            current_section = "headline"; continue
+        elif "---AI自己採点総括---" in stripped:
+            current_section = "self_eval"; continue
         elif "---セクション終わり---" in stripped:
             current_section = None;      continue
 
@@ -470,21 +347,6 @@ def parse_report(raw_text):
                 result["score"] = int("".join(filter(str.isdigit, stripped)))
             except Exception:
                 pass
-        elif current_section == "self":
-            if result["self_score"] is None and stripped:
-                # 「初回」と返ってきた場合は-1（初回フラグ）
-                if "初回" in stripped:
-                    result["self_score"] = -1
-                else:
-                    digits = "".join(filter(str.isdigit, stripped))
-                    if digits:
-                        try:
-                            result["self_score"] = int(digits)
-                        except Exception:
-                            pass
-            elif stripped:
-                # 2行目：一言コメント
-                result["self_comment"] += stripped + " "
         elif current_section == "pred" and stripped:
             if stripped.startswith("上昇シナリオ"):
                 try:
@@ -508,12 +370,16 @@ def parse_report(raw_text):
                     if keyword in val:
                         result["predictions"]["scenario"] = keyword
                         break
+        elif current_section == "headline" and stripped:
+            result["headline"] = stripped
+        elif current_section == "self_eval" and stripped:
+            result["self_eval"] += stripped + " "
 
-    result["comment"]      = result["comment"].strip()
-    result["review"]       = result["review"].strip()
-    result["self_comment"] = result["self_comment"].strip()
+    result["comment"]   = result["comment"].strip()
+    result["review"]    = result["review"].strip()
+    result["headline"]  = result["headline"].strip()
+    result["self_eval"] = result["self_eval"].strip()
     return result
-
 
 # ─── 累計勝敗集計 ────────────────────────────────────────────────
 def calc_cumulative_record(ticker, previous, current_hit):
@@ -525,36 +391,16 @@ def calc_cumulative_record(ticker, previous, current_hit):
         cum["lose"] += 1
     return cum["win"], cum["lose"]
 
-
-def calc_avg_self_score(ticker, previous, new_score):
-    """AI自己採点の過去平均を算出（新スコアを含む）。-1（初回フラグ）は除外。"""
-    prev   = previous.get(ticker, {})
-    scores = list(prev.get("self_scores", []))
-    if new_score is not None:
-        scores.append(new_score)
-    # -1（初回フラグ）は平均計算から除外
-    valid = [s for s in scores if s >= 0]
-    if not valid:
-        return None, scores
-    return round(sum(valid) / len(valid), 1), scores
-
-
-def get_day_count(ticker, previous):
-    """銘柄ごとの観察日数カウント（今日の分を+1して返す）"""
-    prev = previous.get(ticker, {})
-    return prev.get("day_count", 0) + 1
-
-
 # ─── note投稿用テキスト生成（1銘柄分） ───────────────────────────
-def build_note_text_single(date_str, r, previous):
+def build_note_text_single(date_str, r, previous, obs_day):
     today  = datetime.date.today()
     ind    = r["ind"]
     parsed = r["parsed"]
     ticker = ind["ticker"]
     prev   = previous.get(ticker, {})
     pred   = prev.get("predictions") if prev else None
+    prev_score = prev.get("score") if prev else None
 
-    day_count   = get_day_count(ticker, previous)
     change_sign = "▲" if ind["change_pct"] >= 0 else "▼"
     change_abs  = abs(ind["change_pct"])
     vol_ratio   = ind["volume"] / ind["volume_ma5"] * 100
@@ -565,26 +411,30 @@ def build_note_text_single(date_str, r, previous):
     else:
         current_hit = None
 
-    cum_win, cum_lose = calc_cumulative_record(ticker, previous, current_hit)
-    cum_total = cum_win + cum_lose
-    cum_rate  = f"{int(cum_win/cum_total*100)}%" if cum_total > 0 else "―"
+    score = parsed["score"]
+    headline = parsed.get("headline", "")
+    self_eval = parsed.get("self_eval", "")
 
-    avg_self, _ = calc_avg_self_score(ticker, previous, parsed.get("self_score"))
+    # ─── タイトル生成 ───────────────────────────────────────────
+    # 【定点観測銘柄〇日目】サブタイトル / 見出し
+    score_label = "強気" if (score or 0) >= 70 else ("中立" if (score or 0) >= 50 else "弱気")
+    sub_title   = f"{ind['name']}（{ind['ticker']}）{obs_day}日目"
+    note_title  = f"【定点観測銘柄{obs_day}日目】{headline}"
 
     lines = []
-    # ── タイトル（変更点2：〇日目カウント追加）──────────────
     lines.append("【noteタイトル候補】")
-    lines.append(f"AI予測は本当に当たるのか？{ind['name']}を毎日検証【{day_count}日目・{date_str}】")
+    lines.append(note_title)
+    lines.append(f"サブタイトル：{sub_title}")
     lines.append("")
     lines.append("=" * 50)
     lines.append("【ここから本文をコピーしてnoteに貼ってください】")
     lines.append("=" * 50)
     lines.append("")
+    # ★変更②：定型文の後に銘柄名・日数表記なし
     lines.append(f"本日も{ind['name']}をAIでテクニカル分析しました。前日予測の結果と合わせて確認しながら、チャート指標を中心にAIの市場分析精度を日々検証しています。")
     lines.append("")
-    # ── 変更点3：「対象銘柄：」行を削除 ─────────────────────
     lines.append("━" * 30)
-    lines.append(f"■ {ind['name']}（{ind['ticker']}）　{day_count}日目")
+    lines.append(f"■ {ind['name']}（{ind['ticker']}）")
     lines.append("")
     lines.append("【本日の主要指標】")
     lines.append(f"現在値　：{ind['price']:,.0f}円（{change_sign}{change_abs:.2f}%）")
@@ -599,17 +449,15 @@ def build_note_text_single(date_str, r, previous):
     lines.append(parsed["comment"] if parsed["comment"] else "（取得できませんでした）")
     lines.append("")
 
-    # ── 変更点5：上昇期待度の直後に明日の予測シナリオ ────────
-    score = parsed["score"]
-    if score is not None:
-        score_label = "強気" if score >= 70 else ("中立" if score >= 50 else "弱気")
-        score_str   = f"{score}点 / 100点（{score_label}）"
-    else:
-        score_str = "―"
-    lines.append(f"上昇期待度：{score_str}")
-    lines.append("※トレンド・MACD・RSI・出来高・BBを採点した総合スコアです")
-    lines.append("")
+    if pred and pred.get("scenario"):
+        hit = "✅ 的中" if current_hit else "❌ 外れ"
+        lines.append("【昨日の予測答え合わせ】")
+        lines.append(f"昨日の予測：{pred['scenario']}　実際：{actual}　→ {hit}")
+        if parsed["review"]:
+            lines.append(f"振り返り：{parsed['review']}")
+        lines.append("")
 
+    # ★変更③：予測シナリオ → 明日の上昇期待度の順
     p = parsed["predictions"]
     if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
         lines.append("【明日の予測シナリオ】")
@@ -621,42 +469,34 @@ def build_note_text_single(date_str, r, previous):
             lines.append(f"下落　　：{p['bearish_price']:,}円")
         lines.append("")
 
-    # ── 変更点6：答え合わせ＋総括＋AI自己採点をまとめて最後へ ─
-    lines.append("【振り返りと総括】")
-    if pred and pred.get("scenario"):
-        hit = "✅ 的中" if current_hit else "❌ 外れ"
-        lines.append(f"昨日の予測：{pred['scenario']}　実際：{actual}　→ {hit}")
-        if parsed["review"]:
-            lines.append(f"振り返り：{parsed['review']}")
+    # ★変更③：「明日の上昇期待度」として予測シナリオ直後に表示
+    if score is not None:
+        score_str = f"{score}点 / 100点（{score_label}）"
+        lines.append(f"明日の上昇期待度：{score_str}")
+        lines.append("※トレンド・MACD・RSI・出来高・BBを採点した総合スコアです")
         lines.append("")
 
-    if parsed["score"] is not None:
-        s = parsed["score"]
-        score_comment = "強気継続" if s >= 70 else ("中立圏" if s >= 50 else "弱気圏")
-        lines.append(f"上昇期待度 {s}点（{score_comment}）・本日{actual}")
-    lines.append(f"予測精度　：{cum_win}勝{cum_lose}敗（的中率 {cum_rate}）")
+    # ★変更④：【総括】 ①前日→本日スコア ②AI自己採点 ③コメント、勝敗廃止
+    lines.append("【総括】")
+    # ①前日→本日スコア変化
+    if prev_score is not None and score is not None:
+        direction = "改善" if score > prev_score else ("悪化" if score < prev_score else "横ばい")
+        lines.append(f"前日の上昇期待度{prev_score}点に対し本日は{score}点（{direction}）")
+    elif score is not None:
+        lines.append(f"本日の上昇期待度：{score}点（初回観察）")
+    # ②AI自己採点
+    if self_eval:
+        lines.append(f"AI自己採点：{self_eval}")
+    # ③本日の動き総括コメント
+    lines.append(f"本日{actual}・{score_label}圏で推移")
     lines.append("")
-
-    # AI自己採点（昨日の予測 vs 今日の結果）
-    ss = parsed.get("self_score")
-    if ss == -1:
-        lines.append("【AI自己採点（昨日の予測 vs 今日の結果）】")
-        lines.append("初回観察のため採点なし")
-        lines.append("")
-    elif ss is not None:
-        avg_str = f"{avg_self}点" if avg_self is not None else "―"
-        lines.append(f"【AI自己採点（昨日の予測 vs 今日の結果）】{ss}点 / 100点　（過去平均：{avg_str}）")
-        if parsed.get("self_comment"):
-            lines.append(f"コメント：{parsed['self_comment']}")
-        lines.append("")
-
     lines.append("━" * 30)
     lines.append("※本記事はAIによる市場観察記録であり、投資助言を目的とするものではありません。")
     lines.append("")
-    lines.append(f"#株式観察 #テクニカル分析 #定点観測 #AI予測検証 #{today.strftime('%Y%m%d')}")
+    # ★変更⑤：ハッシュタグにUFJ・ソニー追加
+    lines.append(f"#株式観察 #テクニカル分析 #定点観測 #AI予測検証 #UFJ #ソニー #{today.strftime('%Y%m%d')}")
 
     return "\n".join(lines)
-
 
 # ─── HTML生成 ─────────────────────────────────────────────────────
 def build_report_html(date_str, results, previous):
@@ -668,7 +508,6 @@ def build_report_html(date_str, results, previous):
         prev   = previous.get(ticker, {})
         pred   = prev.get("predictions") if prev else None
 
-        day_count    = get_day_count(ticker, previous)
         change_class = "up" if ind["change_pct"] >= 0 else "down"
         change_sign  = "+" if ind["change_pct"] >= 0 else ""
         vol_ratio    = ind["volume"] / ind["volume_ma5"] * 100
@@ -683,30 +522,6 @@ def build_report_html(date_str, results, previous):
         cum_total = cum_win + cum_lose
         cum_rate  = f"{int(cum_win/cum_total*100)}%" if cum_total > 0 else "―"
 
-        avg_self, _ = calc_avg_self_score(ticker, previous, parsed.get("self_score"))
-
-        # チャート画像（変更点4）
-        chart_b64 = r.get("chart_b64")
-        chart_html = ""
-        if chart_b64:
-            chart_html = f'<img src="data:image/png;base64,{chart_b64}" style="width:100%;border-bottom:1px solid var(--border);" alt="chart">'
-
-        # 変更点5：上昇期待度の直後に予測シナリオ
-        score_str = f"{parsed['score']}点" if parsed["score"] is not None else "―"
-        p = parsed["predictions"]
-        pred_html = ""
-        if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
-            pred_html = f"""
-          <div class="pred-box" style="margin-bottom:1rem;">
-            <span class="pred-label">明日の予測シナリオ（ATR基準）</span>
-            <div class="pred-scenarios">
-              <span class="scenario up-s">上昇 {p['bullish_price']:,}円</span>
-              <span class="scenario neu-s">横ばい {p['neutral_range']}円</span>
-              <span class="scenario down-s">下落 {p['bearish_price']:,}円</span>
-            </div>
-          </div>"""
-
-        # 変更点6：答え合わせ＋AI自己採点を最後にまとめる
         if pred and pred.get("scenario"):
             hit_cls = "hit" if current_hit else "miss"
             hit_str = "✅ 的中" if current_hit else "❌ 外れ"
@@ -721,26 +536,43 @@ def build_report_html(date_str, results, previous):
         else:
             answer_html = ""
 
-        # AI自己採点HTML（-1=初回フラグ、None=パース失敗）
-        ss = parsed.get("self_score")
-        if ss == -1:
-            # 初回観察：採点なし表示
-            self_html = """
-          <div class="self-score-box">
-            <span class="answer-label">AI自己採点（昨日の予測 vs 今日の結果）</span>
-            <span class="self-score-avg" style="font-size:0.9rem;">初回観察のため採点なし</span>
-          </div>"""
-        elif ss is not None:
-            avg_str = f"{avg_self}点" if avg_self is not None else "―"
-            self_html = f"""
-          <div class="self-score-box">
-            <span class="answer-label">AI自己採点（昨日の予測 vs 今日の結果）</span>
-            <span class="self-score-value">{ss}<small> / 100点</small></span>
-            <span class="self-score-avg">過去平均 {avg_str}</span>
-            {f'<p class="review">{parsed["self_comment"]}</p>' if parsed.get("self_comment") else ""}
-          </div>"""
+        p = parsed["predictions"]
+        score = parsed["score"]
+        score_str = f"{score}点" if score is not None else "―"
+
+        # ★HTML版も予測シナリオ → 明日の上昇期待度の順
+        pred_html = ""
+        if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
+            pred_html = f"""
+          <div class="pred-box">
+            <span class="pred-label">明日の予測シナリオ（ATR基準）</span>
+            <div class="pred-scenarios">
+              <span class="scenario up-s">上昇 {p['bullish_price']:,}円</span>
+              <span class="scenario neu-s">横ばい {p['neutral_range']}円</span>
+              <span class="scenario down-s">下落 {p['bearish_price']:,}円</span>
+            </div>
+          </div>
+          <div class="score-badge" style="margin-top:0.8rem">明日の上昇期待度 <strong>{score_str}</strong></div>"""
+
+        # ★HTML版総括
+        prev_score = prev.get("score")
+        self_eval  = parsed.get("self_eval", "")
+        if prev_score is not None and score is not None:
+            direction = "改善" if score > prev_score else ("悪化" if score < prev_score else "横ばい")
+            summary_line = f"前日{prev_score}点 → 本日{score}点（{direction}）"
+        elif score is not None:
+            summary_line = f"本日{score}点（初回）"
         else:
-            self_html = ""
+            summary_line = ""
+
+        summary_html = ""
+        if summary_line or self_eval:
+            summary_html = f"""
+          <div class="summary-box">
+            <span class="summary-label">総括</span>
+            {f'<p class="summary-score">{summary_line}</p>' if summary_line else ""}
+            {f'<p class="summary-eval">{self_eval}</p>' if self_eval else ""}
+          </div>"""
 
         cards += f"""
         <div class="card">
@@ -748,14 +580,12 @@ def build_report_html(date_str, results, previous):
             <div class="ticker-info">
               <span class="ticker">{ind['ticker']}</span>
               <span class="name">{ind['name']}</span>
-              <span class="day-badge">{day_count}日目</span>
             </div>
             <div class="price-info">
               <span class="price">{ind['price']:,.2f}</span>
               <span class="change {change_class}">{change_sign}{ind['change_pct']:.2f}%</span>
             </div>
           </div>
-          {chart_html}
           <div class="metrics">
             <div class="metric"><span class="label">RSI</span><span class="value">{ind['rsi']:.1f}</span></div>
             <div class="metric"><span class="label">MA5</span><span class="value">{ind['ma5']:,.0f}</span></div>
@@ -765,12 +595,10 @@ def build_report_html(date_str, results, previous):
             <div class="metric"><span class="label">出来高比</span><span class="value">{vol_ratio:.0f}%</span></div>
           </div>
           <div class="report-body">
-            <div class="score-badge">上昇期待度 <strong>{score_str}</strong></div>
-            <div class="cum-record">予測精度：{cum_win}勝{cum_lose}敗（的中率 {cum_rate}）</div>
             <p class="comment">{parsed['comment']}</p>
-            {pred_html}
             {answer_html}
-            {self_html}
+            {pred_html}
+            {summary_html}
           </div>
         </div>
 """
@@ -798,7 +626,6 @@ def build_report_html(date_str, results, previous):
     .card-header {{ display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); }}
     .ticker {{ font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--accent); }}
     .name {{ margin-left: 0.8rem; color: var(--muted); font-size: 0.9rem; }}
-    .day-badge {{ margin-left: 0.8rem; background: #21262d; border: 1px solid var(--border); border-radius: 4px; padding: 0.1rem 0.5rem; font-size: 0.75rem; color: var(--accent); font-family: 'JetBrains Mono', monospace; }}
     .price {{ font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 600; }}
     .change {{ font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; margin-left: 0.6rem; font-weight: 600; }}
     .change.up {{ color: var(--up); }} .change.down {{ color: var(--down); }}
@@ -808,9 +635,8 @@ def build_report_html(date_str, results, previous):
     .metric .label {{ display: block; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 0.3rem; }}
     .metric .value {{ font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; }}
     .report-body {{ padding: 1.5rem; font-size: 0.92rem; color: #cdd9e5; }}
-    .score-badge {{ display: inline-block; background: #21262d; border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.5rem; }}
+    .score-badge {{ display: inline-block; background: #21262d; border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.8rem; }}
     .score-badge strong {{ color: var(--accent); font-size: 1.05rem; }}
-    .cum-record {{ display: inline-block; background: #21262d; border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem; margin-bottom: 0.8rem; color: var(--muted); }}
     .comment {{ line-height: 1.8; margin-bottom: 1rem; }}
     .answer-box {{ border-radius: 6px; padding: 0.8rem 1rem; margin-bottom: 1rem; }}
     .answer-box.hit {{ background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); }}
@@ -819,17 +645,17 @@ def build_report_html(date_str, results, previous):
     .answer-result {{ font-size: 1rem; font-weight: 600; margin-right: 0.8rem; }}
     .answer-detail {{ font-size: 0.85rem; color: var(--muted); }}
     .review {{ font-size: 0.85rem; color: #adbac7; margin-top: 0.5rem; line-height: 1.7; }}
-    .pred-box {{ background: #21262d; border-radius: 6px; padding: 0.8rem 1rem; }}
+    .pred-box {{ background: #21262d; border-radius: 6px; padding: 0.8rem 1rem; margin-bottom: 0.8rem; }}
     .pred-label {{ display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }}
     .pred-scenarios {{ display: flex; gap: 0.6rem; flex-wrap: wrap; }}
     .scenario {{ font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }}
     .up-s {{ background: rgba(63,185,80,0.15); color: var(--up); }}
     .neu-s {{ background: rgba(88,166,255,0.15); color: var(--accent); }}
     .down-s {{ background: rgba(248,81,73,0.15); color: var(--down); }}
-    .self-score-box {{ background: #21262d; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin-top: 1rem; }}
-    .self-score-value {{ font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 700; color: var(--accent); margin-right: 0.8rem; }}
-    .self-score-value small {{ font-size: 0.75rem; color: var(--muted); }}
-    .self-score-avg {{ font-size: 0.8rem; color: var(--muted); }}
+    .summary-box {{ background: #21262d; border-radius: 6px; padding: 0.8rem 1rem; margin-top: 0.8rem; border-left: 3px solid var(--accent); }}
+    .summary-label {{ display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.4rem; }}
+    .summary-score {{ font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }}
+    .summary-eval {{ font-size: 0.85rem; color: #adbac7; line-height: 1.7; }}
     footer {{ text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }}
     a {{ color: var(--accent); text-decoration: none; }}
     a:hover {{ text-decoration: underline; }}
@@ -888,7 +714,6 @@ def build_index_html(report_files):
 </body>
 </html>"""
 
-
 # ─── メイン ───────────────────────────────────────────────────────
 def main():
     if not is_market_open_today():
@@ -917,15 +742,12 @@ def main():
             print(f"[{ticker}] 取得失敗。スキップします。")
             continue
 
-        # チャート生成（変更点4）
-        print(f"[{ticker}] チャート生成中...")
-        chart_b64 = generate_chart_base64(ind)
-
         prev_data = previous.get(ticker)
         print(f"[{ticker}] Claudeでレポート生成中...")
         raw_report = generate_report(client, ind, prev_data)
         parsed     = parse_report(raw_report)
 
+        # 本日の的中判定（累計用）
         prev_pred = prev_data.get("predictions") if prev_data else None
         if prev_pred and prev_pred.get("scenario"):
             actual      = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
@@ -934,26 +756,23 @@ def main():
             current_hit = None
 
         cum_win, cum_lose = calc_cumulative_record(ticker, previous, current_hit)
-        _, new_scores     = calc_avg_self_score(ticker, previous, parsed.get("self_score"))
-        day_count         = get_day_count(ticker, previous)
 
-        # _df はJSONに保存しない
-        ind_save = {k: v for k, v in ind.items() if k != "_df"}
+        # 観察開始日を初回のみ記録
+        prev_cum   = previous.get(ticker, {}).get("cumulative", {})
+        start_date = prev_cum.get("start_date", today.isoformat())
 
         new_prev[ticker] = {
-            "ind":         ind_save,
+            "ind":         ind,
             "predictions": parsed["predictions"],
-            "cumulative":  {"win": cum_win, "lose": cum_lose},
-            "self_scores": new_scores,
-            "day_count":   day_count,
+            "score":       parsed["score"],   # ★スコアを保存
+            "cumulative":  {
+                "win":        cum_win,
+                "lose":       cum_lose,
+                "start_date": start_date,
+            },
         }
 
-        results.append({
-            "ind":       ind,
-            "report":    raw_report,
-            "parsed":    parsed,
-            "chart_b64": chart_b64,
-        })
+        results.append({"ind": ind, "report": raw_report, "parsed": parsed})
         time.sleep(1)
 
     # レポートHTML保存
@@ -965,8 +784,10 @@ def main():
 
     # note投稿用テキスト保存（銘柄ごとに1ファイル）
     for r in results:
-        ticker_safe = r["ind"]["ticker"].replace(".", "-")
-        note_text   = build_note_text_single(date_str, r, previous)
+        ticker      = r["ind"]["ticker"]
+        ticker_safe = ticker.replace(".", "-")
+        obs_day, _  = get_observation_day(ticker, previous)
+        note_text   = build_note_text_single(date_str, r, previous, obs_day)
         note_path   = NOTE_DIR / f"{today.strftime('%Y-%m-%d')}_{ticker_safe}.txt"
         with open(note_path, "w", encoding="utf-8") as f:
             f.write(note_text)
@@ -982,9 +803,9 @@ def main():
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(index_html)
 
+    # 前日データ更新
     save_previous(new_prev)
     print("完了!")
-
 
 if __name__ == "__main__":
     main()
