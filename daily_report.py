@@ -124,45 +124,73 @@ def calc_atr(high, low, close, period=14):
     ], axis=1).max(axis=1)
     return float(tr.rolling(period).mean().iloc[-1])
 
+# ★修正①: yfinanceのマルチインデックス対応 + データ取得堅牢化
+def to_series(col_data):
+    """DataFrameまたはSeriesをSeriesに変換する。マルチインデックス対策。"""
+    if isinstance(col_data, pd.DataFrame):
+        # マルチカラムの場合は最初の列を使う
+        return col_data.iloc[:, 0]
+    return col_data
+
 def fetch_indicators(ticker):
     for attempt in range(3):
         try:
             df = yf.download(ticker, period="6mo", progress=False, auto_adjust=True)
-            if not df.empty:
-                info     = yf.Ticker(ticker).info
-                name_raw = info.get("longName") or info.get("shortName") or ticker
-                name     = info.get("longNameJa") or info.get("shortNameJa") or name_raw
-                close    = df["Close"].squeeze()
-                high     = df["High"].squeeze()
-                low      = df["Low"].squeeze()
-                volume   = df["Volume"].squeeze()
-                price      = float(close.iloc[-1])
-                prev_price = float(close.iloc[-2])
-                bb_upper, bb_mid, bb_lower = calc_bollinger(close)
-                atr = calc_atr(high, low, close)
-                ind = {
-                    "ticker":     ticker,
-                    "name":       name,
-                    "price":      price,
-                    "prev_price": prev_price,
-                    "change_pct": (price - prev_price) / prev_price * 100,
-                    "ma5":        float(close.rolling(5).mean().iloc[-1]),
-                    "ma25":       float(close.rolling(25).mean().iloc[-1]),
-                    "ma75":       float(close.rolling(75).mean().iloc[-1]) if len(close) >= 75 else float("nan"),
-                    "rsi":        calc_rsi(close),
-                    "macd":       calc_macd(close)[0],
-                    "macd_sig":   calc_macd(close)[1],
-                    "macd_hist":  calc_macd(close)[2],
-                    "macd_prev":  calc_macd(close)[3],
-                    "bb_upper":   bb_upper,
-                    "bb_mid":     bb_mid,
-                    "bb_lower":   bb_lower,
-                    "atr":        atr,
-                    "atr_pct":    atr / price * 100,
-                    "volume":     float(volume.iloc[-1]),
-                    "volume_ma5": float(volume.rolling(5).mean().iloc[-1]),
-                }
-                return ind
+            if df.empty:
+                print(f"  [{ticker}] データが空です (attempt {attempt+1})")
+                time.sleep(2)
+                continue
+
+            info     = yf.Ticker(ticker).info
+            name_raw = info.get("longName") or info.get("shortName") or ticker
+            name     = info.get("longNameJa") or info.get("shortNameJa") or name_raw
+
+            # ★ squeeze()ではなくto_series()でSeriesに変換
+            close  = to_series(df["Close"])
+            high   = to_series(df["High"])
+            low    = to_series(df["Low"])
+            volume = to_series(df["Volume"])
+
+            # データが十分あるか確認（最低30日分）
+            if len(close) < 30:
+                print(f"  [{ticker}] データが不足しています: {len(close)}行")
+                time.sleep(2)
+                continue
+
+            price      = float(close.iloc[-1])
+            prev_price = float(close.iloc[-2])
+            bb_upper, bb_mid, bb_lower = calc_bollinger(close)
+            atr = calc_atr(high, low, close)
+            ind = {
+                "ticker":     ticker,
+                "name":       name,
+                "price":      price,
+                "prev_price": prev_price,
+                "change_pct": (price - prev_price) / prev_price * 100,
+                "ma5":        float(close.rolling(5).mean().iloc[-1]),
+                "ma25":       float(close.rolling(25).mean().iloc[-1]),
+                "ma75":       float(close.rolling(75).mean().iloc[-1]) if len(close) >= 75 else float("nan"),
+                "rsi":        calc_rsi(close),
+                "macd":       calc_macd(close)[0],
+                "macd_sig":   calc_macd(close)[1],
+                "macd_hist":  calc_macd(close)[2],
+                "macd_prev":  calc_macd(close)[3],
+                "bb_upper":   bb_upper,
+                "bb_mid":     bb_mid,
+                "bb_lower":   bb_lower,
+                "atr":        atr,
+                "atr_pct":    atr / price * 100,
+                "volume":     float(volume.iloc[-1]),
+                "volume_ma5": float(volume.rolling(5).mean().iloc[-1]),
+            }
+
+            # 取得した値にnanが含まれていないか確認
+            nan_keys = [k for k, v in ind.items() if isinstance(v, float) and np.isnan(v) and k not in ("ma75",)]
+            if nan_keys:
+                print(f"  [{ticker}] 一部指標がnan: {nan_keys} (attempt {attempt+1})")
+
+            return ind
+
         except Exception as e:
             print(f"  [{ticker}] attempt {attempt+1} failed: {e}")
         time.sleep(2)
@@ -227,6 +255,7 @@ def generate_report(client, ind, prev_data):
 
 ---上昇期待度---
 以下の採点基準で合計点を計算し、数字のみ（0〜100の整数）を出力してください。
+「15点 / 100点」のような形式ではなく、整数のみ（例: 15）を出力すること。
 
 【採点基準（合計100点）】
 ■ トレンド方向（30点）
@@ -257,11 +286,12 @@ def generate_report(client, ind, prev_data):
 ・株価がBB上限を超えている（突破または過熱） → 5点
 ・株価がBBミッド未満 → 0点
 
-合計点を0〜100の整数で出力。
+合計点を整数のみで出力（例: 45）。
 
 ---AI自己採点---
 （昨日の予測が的中か外れかをもとに、今回の予測精度を0〜100点で自己採点し、整数のみ出力してください。
 的中なら高め、外れなら低め、予測根拠が明確で惜しい外れなら中程度とすること。初回は50点とする。）
+整数のみで出力（例: 70）。
 
 ---明日の予測---
 （ATRを参考に価格レンジを算出すること。ATR値を±の目安として使用。）
@@ -280,12 +310,29 @@ def generate_report(client, ind, prev_data):
     return message.content[0].text
 
 # ─── レスポンスパース ─────────────────────────────────────────────
+# ★修正②: スコアのパースバグ修正（「15点 / 100点」→15100になる問題）
+def parse_score(line):
+    """行から0〜100のスコアを安全に抽出する"""
+    stripped = line.strip()
+    if not stripped:
+        return None
+    # 「/」より前だけを見る（「15点 / 100点」→「15点」）
+    before_slash = stripped.split("/")[0]
+    digits = "".join(filter(str.isdigit, before_slash))
+    if not digits:
+        return None
+    val = int(digits)
+    # 0〜100の範囲外は無効
+    if 0 <= val <= 100:
+        return val
+    return None
+
 def parse_report(raw_text):
     result = {
         "comment":    "",
         "review":     "",
         "score":      None,
-        "self_score": None,   # AI自己採点
+        "self_score": None,
         "predictions": {
             "bullish_price": None,
             "neutral_range": None,
@@ -318,15 +365,15 @@ def parse_report(raw_text):
         elif current_section == "review" and stripped:
             result["review"] += stripped + " "
         elif current_section == "score" and stripped:
-            try:
-                result["score"] = int("".join(filter(str.isdigit, stripped)))
-            except Exception:
-                pass
+            # ★ parse_score()を使う
+            val = parse_score(stripped)
+            if val is not None and result["score"] is None:
+                result["score"] = val
         elif current_section == "self_score" and stripped:
-            try:
-                result["self_score"] = int("".join(filter(str.isdigit, stripped)))
-            except Exception:
-                pass
+            # ★ parse_score()を使う
+            val = parse_score(stripped)
+            if val is not None and result["self_score"] is None:
+                result["self_score"] = val
         elif current_section == "pred" and stripped:
             if stripped.startswith("上昇シナリオ"):
                 try:
@@ -369,7 +416,6 @@ def calc_cumulative_record(ticker, previous, current_hit):
 
 
 def calc_avg_self_score(previous, ticker, new_self_score):
-    """self_scoreの累計平均を計算して返す（新スコアを含む）"""
     prev = previous.get(ticker, {})
     cum  = prev.get("cumulative", {})
     total = cum.get("self_score_sum", 0) + (new_self_score or 0)
@@ -400,21 +446,13 @@ def build_note_text_single(date_str, r, previous):
 
     cum_win, cum_lose, ss_sum, ss_count = calc_cumulative_record(ticker, previous, current_hit)
     cum_total = cum_win + cum_lose
-
-    # 観察日数（今日が何日目か）= 累計試合数 + 1
     day_num = cum_total + 1
-
-    # AI自己採点の今回点と累計平均
     self_score     = parsed.get("self_score")
     avg_self_score = calc_avg_self_score(previous, ticker, self_score)
 
     lines = []
-
-    # ─ タイトル（noteタイトル候補を削除し、直接記事タイトルから始める）
     lines.append(f"【定点観測 {ind['name']} {day_num}日目】")
     lines.append("")
-
-    # ─ 1. 本日の主要指標
     lines.append("【本日の主要指標】")
     lines.append(f"現在値　：{ind['price']:,.0f}円（{change_sign}{change_abs:.2f}%）")
     lines.append(f"RSI　　 ：{ind['rsi']:.1f}")
@@ -424,13 +462,10 @@ def build_note_text_single(date_str, r, previous):
     lines.append(f"ATR　　 ：{ind['atr']:.2f}円（株価比 {ind['atr_pct']:.2f}%）")
     lines.append(f"出来高　：{ind['volume']:,.0f}（5日平均比 {vol_ratio:.0f}%）")
     lines.append("")
-
-    # ─ 2. AI観察コメント
     lines.append("【AI観察コメント】")
     lines.append(parsed["comment"] if parsed["comment"] else "（取得できませんでした）")
     lines.append("")
 
-    # ─ 3. 明日の予測シナリオ
     p = parsed["predictions"]
     if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
         lines.append("【明日の予測シナリオ】")
@@ -442,7 +477,6 @@ def build_note_text_single(date_str, r, previous):
             lines.append(f"下落　　：{p['bearish_price']:,}円")
         lines.append("")
 
-    # ─ 4. 昨日の予測答え合わせ
     if pred and pred.get("scenario"):
         hit = "✅ 的中" if current_hit else "❌ 外れ"
         lines.append("【昨日の予測答え合わせ】")
@@ -450,8 +484,6 @@ def build_note_text_single(date_str, r, previous):
         if parsed["review"]:
             lines.append(f"振り返り：{parsed['review']}")
         lines.append("")
-
-        # AI自己採点（答え合わせがある日だけ表示）
         lines.append("【AI自己採点】")
         if self_score is not None:
             lines.append(f"今回の予測精度：{self_score}点 / 100点")
@@ -459,7 +491,6 @@ def build_note_text_single(date_str, r, previous):
             lines.append(f"累計平均点　　：{avg_self_score}点")
         lines.append("")
 
-    # ─ 免責
     lines.append("━" * 30)
     lines.append("※本記事はAIによる市場観察記録であり、投資助言を目的とするものではありません。")
     lines.append("")
@@ -699,8 +730,6 @@ def main():
             current_hit = None
 
         cum_win, cum_lose, ss_sum, ss_count = calc_cumulative_record(ticker, previous, current_hit)
-
-        # self_score の累計を更新
         new_ss_sum   = ss_sum   + (parsed["self_score"] or 0)
         new_ss_count = ss_count + (1 if parsed["self_score"] is not None else 0)
 
@@ -718,14 +747,12 @@ def main():
         results.append({"ind": ind, "report": raw_report, "parsed": parsed})
         time.sleep(1)
 
-    # レポートHTML保存
     report_html = build_report_html(date_str, results, previous)
     report_path = REPORT_DIR / fname
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(report_html)
     print(f"レポートHTML保存: {report_path}")
 
-    # note投稿用テキスト保存（銘柄ごとに1ファイル）
     for r in results:
         ticker_safe = r["ind"]["ticker"].replace(".", "-")
         note_text   = build_note_text_single(date_str, r, previous)
@@ -734,7 +761,6 @@ def main():
             f.write(note_text)
         print(f"note用テキスト保存: {note_path}")
 
-    # index.html更新
     existing = sorted(
         [(p.name, p.stem.replace("-", "年", 1).replace("-", "月", 1) + "日")
          for p in REPORT_DIR.glob("*.html")],
