@@ -709,6 +709,29 @@ def build_index_html(report_files):
   </div>
 </body>
 </html>"""
+# ─── 古いファイル削除 ─────────────────────────────────────────────
+def cleanup_old_files(days=10):
+    cutoff = datetime.date.today() - datetime.timedelta(days=days)
+
+    # reportsフォルダの古いHTMLを削除
+    for p in REPORT_DIR.glob("*.html"):
+        try:
+            file_date = datetime.date.fromisoformat(p.stem)
+            if file_date < cutoff:
+                p.unlink()
+                print(f"削除: {p.name}")
+        except ValueError:
+            pass
+
+    # noteフォルダの古いtxtを削除
+    for p in NOTE_DIR.glob("*.txt"):
+        try:
+            file_date = datetime.date.fromisoformat(p.stem[:10])
+            if file_date < cutoff:
+                p.unlink()
+                print(f"削除: {p.name}")
+        except ValueError:
+            pass
 
 # ─── メイン ───────────────────────────────────────────────────────
 def main():
