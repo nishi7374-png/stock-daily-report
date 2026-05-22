@@ -711,36 +711,13 @@ def build_index_html(report_files):
 </html>"""
 
 # ─── メイン ───────────────────────────────────────────────────────
-def cleanup_old_files(days=10):
-    cutoff = datetime.date.today() - datetime.timedelta(days=days)
-    
-    # reportsフォルダの古いHTMLを削除
-    for p in REPORT_DIR.glob("*.html"):
-        try:
-            file_date = datetime.date.fromisoformat(p.stem)
-            if file_date < cutoff:
-                p.unlink()
-                print(f"削除: {p.name}")
-        except ValueError:
-            pass
-    
-    # noteフォルダの古いtxtを削除
-    for p in NOTE_DIR.glob("*.txt"):
-        try:
-            file_date = datetime.date.fromisoformat(p.stem[:10])
-            if file_date < cutoff:
-                p.unlink()
-                print(f"削除: {p.name}")
-        except ValueError:
-            pass
-            
 def main():
     if not is_market_open_today():
         print("本日は市場休場のため処理を終了します。")
         sys.exit(0)
 
-    cleanup_old_files(days=)  
-    
+    cleanup_old_files(days=10)
+
     config  = load_config()
     tickers = config["tickers"]
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
