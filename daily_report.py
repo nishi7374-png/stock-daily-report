@@ -246,6 +246,10 @@ def generate_report(client, ind, prev_data):
 
 以下の形式で出力してください。「エントリー」「利確」「損切り」などの売買用語は使わず、観察・記録の視点で書いてください。
 
+---サブタイトル---
+（本日の観察内容を10文字程度で表した興味を引く一言。例：「底打ち兆候か？」「下落加速に警戒」「膠着続く静観相場」）
+文字列のみ出力。
+
 ---AI観察コメント---
 （100〜150字で、今日の状態を一言で表す。MACDや出来高・ATRなど注目指標に触れること。ATRが高ければ値動きが荒い旨を、低ければ膠着状態を示唆する旨を含めること）
 
@@ -329,6 +333,7 @@ def parse_score(line):
 
 def parse_report(raw_text):
     result = {
+        "subtitle":   "",
         "comment":    "",
         "review":     "",
         "score":      None,
@@ -347,7 +352,9 @@ def parse_report(raw_text):
     for line in lines:
         stripped = line.strip()
 
-        if "---AI観察コメント---" in stripped:
+        if "---サブタイトル---" in stripped:
+            current_section = "subtitle";   continue
+        elif "---AI観察コメント---" in stripped:
             current_section = "comment";    continue
         elif "---昨日の予測を振り返って---" in stripped:
             current_section = "review";     continue
@@ -360,17 +367,18 @@ def parse_report(raw_text):
         elif "---セクション終わり---" in stripped:
             current_section = None;         continue
 
-        if current_section == "comment" and stripped:
+        if current_section == "subtitle" and stripped:
+            if not result["subtitle"]:
+                result["subtitle"] = stripped
+        elif current_section == "comment" and stripped:
             result["comment"] += stripped + " "
         elif current_section == "review" and stripped:
             result["review"] += stripped + " "
         elif current_section == "score" and stripped:
-            # ★ parse_score()を使う
             val = parse_score(stripped)
             if val is not None and result["score"] is None:
                 result["score"] = val
         elif current_section == "self_score" and stripped:
-            # ★ parse_score()を使う
             val = parse_score(stripped)
             if val is not None and result["self_score"] is None:
                 result["self_score"] = val
@@ -450,8 +458,18 @@ def build_note_text_single(date_str, r, previous):
     self_score     = parsed.get("self_score")
     avg_self_score = calc_avg_self_score(previous, ticker, self_score)
 
+    # 銘柄名の短縮マップ
+    name_map = {
+        "Mitsubishi UFJ Financial Group, Inc.": "UFJ",
+        "Sony Group Corporation": "ソニー",
+    }
+    short_name = name_map.get(ind['name'], ind['name'])
+    subtitle   = parsed.get("subtitle", "")
+
     lines = []
-    lines.append(f"【定点観測 {ind['name']} {day_num}日目】")
+    lines.append(f"【定点観測 {short_name} {day_num}日目】{subtitle}")
+    lines.append("")
+    lines.append(f"本日も「{short_name}」をAIでテクニカル分析しました。前日予測の結果と合わせて確認しながら、チャート指標を中心にAIの市場分析精度を日々検証しています。")
     lines.append("")
     lines.append("【本日の主要指標】")
     lines.append(f"現在値　：{ind['price']:,.0f}円（{change_sign}{change_abs:.2f}%）")
@@ -496,7 +514,10 @@ def build_note_text_single(date_str, r, previous):
     lines.append("")
     lines.append(f"#株式観察 #テクニカル分析 #定点観測 #AI予測検証 #{today.strftime('%Y%m%d')}")
 
-    return "\n".join(lines)
+    text = "\n".join(lines)
+    import re
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text
 
 # ─── HTML生成 ─────────────────────────────────────────────────────
 def build_report_html(date_str, results, previous):
