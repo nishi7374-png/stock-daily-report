@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>観察レポート 2026年05月22日</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --up: #3fb950;
+      --down: #f85149; --accent: #58a6ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; padding: 2rem 1rem; }
+    .container { max-width: 860px; margin: 0 auto; }
+    header { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+    header h1 { font-size: 1.1rem; color: var(--muted); font-weight: 400; letter-spacing: 0.05em; }
+    header h2 { font-size: 1.8rem; font-weight: 700; margin-top: 0.3rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); }
+    .ticker { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--accent); }
+    .name { margin-left: 0.8rem; color: var(--muted); font-size: 0.9rem; }
+    .price { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 600; }
+    .change { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; margin-left: 0.6rem; font-weight: 600; }
+    .change.up { color: var(--up); } .change.down { color: var(--down); }
+    .metrics { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .metric { flex: 1; min-width: 80px; padding: 0.8rem 1rem; border-right: 1px solid var(--border); text-align: center; }
+    .metric:last-child { border-right: none; }
+    .metric .label { display: block; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+    .metric .value { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; }
+    .report-body { padding: 1.5rem; font-size: 0.92rem; color: #cdd9e5; }
+    .score-badge { display: inline-block; background: #21262d; border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .score-badge strong { color: var(--accent); font-size: 1.05rem; }
+    .cum-record { display: inline-block; background: #21262d; border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem; margin-bottom: 0.8rem; color: var(--muted); }
+    .comment { line-height: 1.8; margin-bottom: 1rem; }
+    .answer-box { border-radius: 6px; padding: 0.8rem 1rem; margin-bottom: 1rem; }
+    .answer-box.hit { background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); }
+    .answer-box.miss { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); }
+    .answer-label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .answer-result { font-size: 1rem; font-weight: 600; margin-right: 0.8rem; }
+    .answer-detail { font-size: 0.85rem; color: var(--muted); }
+    .review { font-size: 0.85rem; color: #adbac7; margin-top: 0.5rem; line-height: 1.7; }
+    .pred-box { background: #21262d; border-radius: 6px; padding: 0.8rem 1rem; }
+    .pred-label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .pred-scenarios { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .scenario { font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+    .up-s { background: rgba(63,185,80,0.15); color: var(--up); }
+    .neu-s { background: rgba(88,166,255,0.15); color: var(--accent); }
+    .down-s { background: rgba(248,81,73,0.15); color: var(--down); }
+    footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 株式定点観察レポート</h1>
+      <h2>2026年05月22日</h2>
+    </header>
+    
+        <div class="card">
+          <div class="card-header">
+            <div class="ticker-info">
+              <span class="ticker">8306.T</span>
+              <span class="name">Mitsubishi UFJ Financial Group, Inc.</span>
+            </div>
+            <div class="price-info">
+              <span class="price">3,113.00</span>
+              <span class="change up">+1.50%</span>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span class="label">RSI</span><span class="value">65.7</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">3,063</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">2,893</span></div>
+            <div class="metric"><span class="label">MACDヒスト</span><span class="value">22.993</span></div>
+            <div class="metric"><span class="label">ATR</span><span class="value">86.96円</span></div>
+            <div class="metric"><span class="label">出来高比</span><span class="value">44%</span></div>
+          </div>
+          <div class="report-body">
+            <div class="score-badge">上昇期待度 <strong>72点</strong></div>
+            <div class="cum-record">予測精度：2勝2敗（的中率 50%）</div>
+            <p class="comment">株価は3,113円と前日比+1.50%上昇し、全移動平均線を上回る位置を維持。MACDヒストグラムは22.993と前日から拡大し、上昇モメンタムの強化を示す。一方、出来高は5日平均の44%と大きく減少しており、商いが細る中での上昇となった。ATRは86.96円（株価比2.79%）と標準的な水準で、値動きは落ち着いた範囲内。RSI65.7はやや過熱感が見られる。</p>
+            
+          <div class="answer-box miss">
+            <span class="answer-label">昨日の予測答え合わせ</span>
+            <span class="answer-result">❌ 外れ</span>
+            <span class="answer-detail">予測：横ばい → 実際：上昇</span>
+            <p class="review">横ばいを予測したが実際は+1.50%の上昇となった。MACDヒストグラムの拡大傾向とボリンジャーバンド上限への接近という上昇シグナルを見逃した点が要因。出来高減少を過度に警戒し上昇継続の可能性を低く評価した。</p>
+          </div>
+            
+          <div class="pred-box">
+            <span class="pred-label">明日の予測シナリオ（ATR基準）</span>
+            <div class="pred-scenarios">
+              <span class="scenario up-s">上昇 3,200円</span>
+              <span class="scenario neu-s">横ばい 3,026〜3,200円</span>
+              <span class="scenario down-s">下落 3,026円</span>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="ticker-info">
+              <span class="ticker">6758.T</span>
+              <span class="name">Sony Group Corporation</span>
+            </div>
+            <div class="price-info">
+              <span class="price">3,500.00</span>
+              <span class="change down">-1.52%</span>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span class="label">RSI</span><span class="value">59.4</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">3,595</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">3,375</span></div>
+            <div class="metric"><span class="label">MACDヒスト</span><span class="value">25.213</span></div>
+            <div class="metric"><span class="label">ATR</span><span class="value">176.64円</span></div>
+            <div class="metric"><span class="label">出来高比</span><span class="value">41%</span></div>
+          </div>
+          <div class="report-body">
+            <div class="score-badge">上昇期待度 <strong>60点</strong></div>
+            <div class="cum-record">予測精度：2勝2敗（的中率 50%）</div>
+            <p class="comment">株価は前日比1.52%下落し3,500円で着地。MACDヒストは25.213とプラス圏を維持するも前日37.125から縮小し上昇モメンタムに陰り。出来高は7,925,900と5日平均比41%と極めて低調で市場参加者の様子見姿勢が鮮明。ATRは176.64円（株価比5.05%）と中程度の変動性を示し、今後の方向性を探る動きが続く可能性を示唆している。</p>
+            
+          <div class="answer-box miss">
+            <span class="answer-label">昨日の予測答え合わせ</span>
+            <span class="answer-result">❌ 外れ</span>
+            <span class="answer-detail">予測：横ばい → 実際：下落</span>
+            <p class="review">横ばいシナリオを予測したが実際は下落。MACDヒストの縮小傾向を見落とし、出来高の急減も予兆となっていた。上昇モメンタムの減速を過小評価した結果、予測が外れた形となった。</p>
+          </div>
+            
+          <div class="pred-box">
+            <span class="pred-label">明日の予測シナリオ（ATR基準）</span>
+            <div class="pred-scenarios">
+              <span class="scenario up-s">上昇 3,680円</span>
+              <span class="scenario neu-s">横ばい 3,400〜3,600円</span>
+              <span class="scenario down-s">下落 3,320円</span>
+            </div>
+          </div>
+          </div>
+        </div>
+
+    <footer>
+      <p>このレポートは観察記録です。投資判断の根拠にしないでください。</p>
+      <p style="margin-top:0.5rem"><a href="../index.html">← レポート一覧へ</a></p>
+    </footer>
+  </div>
+</body>
+</html>
