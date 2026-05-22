@@ -19,56 +19,56 @@
       "bb_lower": 2666.193904835816,
       "atr": 86.96428571428571,
       "atr_pct": 2.793584507365426,
-      "volume": 21604500.0,
-      "volume_ma5": 49640280.0
+      "volume": 22632300.0,
+      "volume_ma5": 49845840.0
     },
     "predictions": {
       "bullish_price": 3200,
-      "neutral_range": "3,026〜3,200",
-      "bearish_price": 3026,
+      "neutral_range": "3,030〜3,200",
+      "bearish_price": 3030,
       "scenario": "横ばい"
     },
     "cumulative": {
       "win": 2,
-      "lose": 2,
-      "self_score_sum": 25,
-      "self_score_count": 1
+      "lose": 3,
+      "self_score_sum": 50,
+      "self_score_count": 2
     }
   },
   "6758.T": {
     "ind": {
       "ticker": "6758.T",
       "name": "Sony Group Corporation",
-      "price": 3500.0,
+      "price": 3509.0,
       "prev_price": 3554.0,
-      "change_pct": -1.5194147439504784,
-      "ma5": 3595.2,
-      "ma25": 3375.36,
-      "ma75": 3374.5396354166664,
-      "rsi": 59.419263456090654,
-      "macd": 75.57622513344131,
-      "macd_sig": 50.3634563440807,
-      "macd_hist": 25.21276878936061,
+      "change_pct": -1.2661789532920653,
+      "ma5": 3597.0,
+      "ma25": 3375.72,
+      "ma75": 3374.659635416667,
+      "rsi": 59.80042765502495,
+      "macd": 76.29417385138959,
+      "macd_sig": 50.50704608767036,
+      "macd_hist": 25.787127763719226,
       "macd_prev": 37.125137286516086,
-      "bb_upper": 3779.506855447561,
-      "bb_mid": 3378.9,
-      "bb_lower": 2978.293144552439,
+      "bb_upper": 3780.5493991704634,
+      "bb_mid": 3379.35,
+      "bb_lower": 2978.1506008295364,
       "atr": 176.64285714285714,
-      "atr_pct": 5.046938775510204,
-      "volume": 7925900.0,
-      "volume_ma5": 19263620.0
+      "atr_pct": 5.033994218947197,
+      "volume": 8430900.0,
+      "volume_ma5": 19364620.0
     },
     "predictions": {
-      "bullish_price": 3680,
+      "bullish_price": 3685,
       "neutral_range": "3,400〜3,600",
-      "bearish_price": 3320,
+      "bearish_price": 3330,
       "scenario": "横ばい"
     },
     "cumulative": {
       "win": 2,
-      "lose": 2,
-      "self_score_sum": 25,
-      "self_score_count": 1
+      "lose": 3,
+      "self_score_sum": 50,
+      "self_score_count": 2
     }
   }
 }
