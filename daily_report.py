@@ -90,9 +90,24 @@ def load_previous():
             return {}
     return {}
 
+# ★修正①: NaNを含むfloatをJSONに安全に保存できるよう変換する
+def sanitize_for_json(obj):
+    """float の NaN / Inf を None に変換してJSON保存できるようにする"""
+    if isinstance(obj, dict):
+        return {k: sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [sanitize_for_json(v) for v in obj]
+    if isinstance(obj, float):
+        if np.isnan(obj) or np.isinf(obj):
+            return None
+        return obj
+    return obj
+
 def save_previous(data):
+    # ★修正①: 保存前にNaN→Noneに変換する
+    safe_data = sanitize_for_json(data)
     with open(PREV_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        json.dump(safe_data, f, ensure_ascii=False, indent=2)
 
 # ─── テクニカル指標 ───────────────────────────────────────────────
 def calc_rsi(close, period=14):
@@ -124,14 +139,13 @@ def calc_atr(high, low, close, period=14):
     ], axis=1).max(axis=1)
     return float(tr.rolling(period).mean().iloc[-1])
 
-# ★修正①: yfinanceのマルチインデックス対応 + データ取得堅牢化
 def to_series(col_data):
     """DataFrameまたはSeriesをSeriesに変換する。マルチインデックス対策。"""
     if isinstance(col_data, pd.DataFrame):
-        # マルチカラムの場合は最初の列を使う
         return col_data.iloc[:, 0]
     return col_data
 
+# ★修正②: 「最新の有効な取引日」のデータを取得する
 def fetch_indicators(ticker):
     for attempt in range(3):
         try:
@@ -145,22 +159,30 @@ def fetch_indicators(ticker):
             name_raw = info.get("longName") or info.get("shortName") or ticker
             name     = info.get("longNameJa") or info.get("shortNameJa") or name_raw
 
-            # ★ squeeze()ではなくto_series()でSeriesに変換
             close  = to_series(df["Close"])
             high   = to_series(df["High"])
             low    = to_series(df["Low"])
             volume = to_series(df["Volume"])
 
-            # データが十分あるか確認（最低30日分）
+            # ★修正②: NaNを除いた有効な行だけ残す
+            valid_mask = close.notna() & high.notna() & low.notna() & volume.notna()
+            close  = close[valid_mask]
+            high   = high[valid_mask]
+            low    = low[valid_mask]
+            volume = volume[valid_mask]
+
             if len(close) < 30:
-                print(f"  [{ticker}] データが不足しています: {len(close)}行")
+                print(f"  [{ticker}] 有効データが不足しています: {len(close)}行")
                 time.sleep(2)
                 continue
 
+            # ★修正②: iloc[-1] が必ず有効な取引日データになる
             price      = float(close.iloc[-1])
             prev_price = float(close.iloc[-2])
+
             bb_upper, bb_mid, bb_lower = calc_bollinger(close)
             atr = calc_atr(high, low, close)
+
             ind = {
                 "ticker":     ticker,
                 "name":       name,
@@ -182,12 +204,15 @@ def fetch_indicators(ticker):
                 "atr_pct":    atr / price * 100,
                 "volume":     float(volume.iloc[-1]),
                 "volume_ma5": float(volume.rolling(5).mean().iloc[-1]),
+                # ★修正②: 実際に取得できた最終取引日を記録しておく
+                "last_trading_date": str(close.index[-1].date()),
             }
 
-            # 取得した値にnanが含まれていないか確認
             nan_keys = [k for k, v in ind.items() if isinstance(v, float) and np.isnan(v) and k not in ("ma75",)]
             if nan_keys:
                 print(f"  [{ticker}] 一部指標がnan: {nan_keys} (attempt {attempt+1})")
+            else:
+                print(f"  [{ticker}] 取得成功（最終取引日: {ind['last_trading_date']}）")
 
             return ind
 
@@ -201,34 +226,41 @@ def generate_report(client, ind, prev_data):
     prev_ind  = prev_data.get("ind")  if prev_data else None
     prev_pred = prev_data.get("predictions") if prev_data else None
 
-    if prev_ind:
+    # ★修正③: prev_ind に有効な price があるかチェック
+    prev_price_valid = prev_ind and prev_ind.get("price") is not None
+
+    if prev_price_valid:
         diff_text = f"""
 【前日からの変化】
 ・株価: {prev_ind['price']:.2f} → {ind['price']:.2f}（{ind['change_pct']:+.2f}%）
 ・RSI: {prev_ind['rsi']:.1f} → {ind['rsi']:.1f}（{ind['rsi']-prev_ind['rsi']:+.1f}）
 ・MACDヒスト: {prev_ind['macd_hist']:.3f} → {ind['macd_hist']:.3f}
-・ATR: {prev_ind.get('atr', 0):.2f} → {ind['atr']:.2f}（株価比 {ind['atr_pct']:.2f}%）
+・ATR: {prev_ind.get('atr') or 0:.2f} → {ind['atr']:.2f}（株価比 {ind['atr_pct']:.2f}%）
 ・出来高: {prev_ind['volume']:,.0f} → {ind['volume']:,.0f}（5日平均比: {ind['volume']/ind['volume_ma5']*100:.0f}%）
 """
     else:
-        diff_text = "【前日データ】初回観察のため比較なし"
+        diff_text = "【前日データ】初回観察または前回データが無効なため比較なし"
 
-    if prev_pred:
-        bull             = prev_pred.get("bullish_price", 0)
-        bear             = prev_pred.get("bearish_price", 0)
+    if prev_pred and prev_pred.get("scenario"):
+        bull             = prev_pred.get("bullish_price", 0) or 0
+        bear             = prev_pred.get("bearish_price", 0) or 0
         neutral_range    = prev_pred.get("neutral_range", "")
         predicted_scenario = prev_pred.get("scenario", "")
         actual_scenario  = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
         hit = "的中" if predicted_scenario == actual_scenario else "外れ"
+
+        # ★修正③: 前回予測日と今回取得日を表示して透明性を上げる
+        prev_date = prev_data.get("ind", {}).get("last_trading_date", "前回") if prev_data else "前回"
+        curr_date = ind.get("last_trading_date", "今回")
         answer_text = f"""
-【昨日の予測答え合わせ】
+【前回予測の答え合わせ】（予測日: {prev_date} → 検証日: {curr_date}）
 ・予測シナリオ（最有力）: {predicted_scenario}
 ・予測価格帯: 上昇={bull:,.0f}円 / 横ばい={neutral_range}円 / 下落={bear:,.0f}円
 ・実際の結果: {actual_scenario}（{ind['price']:,.2f}円 / {ind['change_pct']:+.2f}%）
 ・判定: {hit}
 """
     else:
-        answer_text = "【昨日の予測答え合わせ】初回観察のためなし"
+        answer_text = "【前回予測の答え合わせ】初回観察のためなし"
 
     prompt = f"""あなたは株式マーケットの観察記録を担当するアナリストです。
 投資推奨ではなく、銘柄の状態を客観的に記録・観察するレポートを日本語で書いてください。
@@ -254,7 +286,7 @@ def generate_report(client, ind, prev_data):
 （100〜150字で、今日の状態を一言で表す。MACDや出来高・ATRなど注目指標に触れること。ATRが高ければ値動きが荒い旨を、低ければ膠着状態を示唆する旨を含めること）
 
 ---昨日の予測を振り返って---
-（前日予測がなぜ当たった／外れたかを指標の動きから考察。60〜100字）
+（前回予測がなぜ当たった／外れたかを指標の動きから考察。60〜100字）
 ※初回観察の場合はこのセクションを省略してください。
 
 ---上昇期待度---
@@ -314,19 +346,16 @@ def generate_report(client, ind, prev_data):
     return message.content[0].text
 
 # ─── レスポンスパース ─────────────────────────────────────────────
-# ★修正②: スコアのパースバグ修正（「15点 / 100点」→15100になる問題）
 def parse_score(line):
     """行から0〜100のスコアを安全に抽出する"""
     stripped = line.strip()
     if not stripped:
         return None
-    # 「/」より前だけを見る（「15点 / 100点」→「15点」）
     before_slash = stripped.split("/")[0]
     digits = "".join(filter(str.isdigit, before_slash))
     if not digits:
         return None
     val = int(digits)
-    # 0〜100の範囲外は無効
     if 0 <= val <= 100:
         return val
     return None
@@ -458,7 +487,6 @@ def build_note_text_single(date_str, r, previous):
     self_score     = parsed.get("self_score")
     avg_self_score = calc_avg_self_score(previous, ticker, self_score)
 
-    # 銘柄名の短縮マップ
     name_map = {
         "Mitsubishi UFJ Financial Group, Inc.": "UFJ",
         "Sony Group Corporation": "ソニー",
@@ -497,8 +525,8 @@ def build_note_text_single(date_str, r, previous):
 
     if pred and pred.get("scenario"):
         hit = "✅ 的中" if current_hit else "❌ 外れ"
-        lines.append("【昨日の予測答え合わせ】")
-        lines.append(f"昨日の予測：{pred['scenario']}　実際：{actual}　→ {hit}")
+        lines.append("【前回予測の答え合わせ】")
+        lines.append(f"前回の予測：{pred['scenario']}　実際：{actual}　→ {hit}")
         if parsed["review"]:
             lines.append(f"振り返り：{parsed['review']}")
         lines.append("")
@@ -549,7 +577,7 @@ def build_report_html(date_str, results, previous):
             review_html = f'<p class="review">{parsed["review"]}</p>' if parsed["review"] else ""
             answer_html = f"""
           <div class="answer-box {hit_cls}">
-            <span class="answer-label">昨日の予測答え合わせ</span>
+            <span class="answer-label">前回予測の答え合わせ</span>
             <span class="answer-result">{hit_str}</span>
             <span class="answer-detail">予測：{pred['scenario']} → 実際：{actual}</span>
             {review_html}
@@ -709,11 +737,11 @@ def build_index_html(report_files):
   </div>
 </body>
 </html>"""
+
 # ─── 古いファイル削除 ─────────────────────────────────────────────
 def cleanup_old_files(days=10):
     cutoff = datetime.date.today() - datetime.timedelta(days=days)
 
-    # reportsフォルダの古いHTMLを削除
     for p in REPORT_DIR.glob("*.html"):
         try:
             file_date = datetime.date.fromisoformat(p.stem)
@@ -723,7 +751,6 @@ def cleanup_old_files(days=10):
         except ValueError:
             pass
 
-    # noteフォルダの古いtxtを削除
     for p in NOTE_DIR.glob("*.txt"):
         try:
             file_date = datetime.date.fromisoformat(p.stem[:10])
