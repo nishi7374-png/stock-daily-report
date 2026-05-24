@@ -1,27 +1,6 @@
 {
   "8306.T": {
-    "ind": {
-      "ticker": "8306.T",
-      "name": "Mitsubishi UFJ Financial Group, Inc.",
-      "price": NaN,
-      "prev_price": 3067.0,
-      "change_pct": NaN,
-      "ma5": NaN,
-      "ma25": NaN,
-      "ma75": NaN,
-      "rsi": NaN,
-      "macd": 65.88024214483539,
-      "macd_sig": 48.97445093821278,
-      "macd_hist": 16.90579120662261,
-      "macd_prev": 21.132239008278262,
-      "bb_upper": NaN,
-      "bb_mid": NaN,
-      "bb_lower": NaN,
-      "atr": NaN,
-      "atr_pct": NaN,
-      "volume": 40421700.0,
-      "volume_ma5": 53403720.0
-    },
+    "ind": null,
     "predictions": {
       "bullish_price": 3180,
       "neutral_range": "3000〜3150",
@@ -29,35 +8,14 @@
       "scenario": "横ばい"
     },
     "cumulative": {
-      "win": 3,
-      "lose": 4,
-      "self_score_sum": 160,
-      "self_score_count": 4
+      "win": 0,
+      "lose": 0,
+      "self_score_sum": 0,
+      "self_score_count": 0
     }
   },
   "6758.T": {
-    "ind": {
-      "ticker": "6758.T",
-      "name": "Sony Group Corporation",
-      "price": NaN,
-      "prev_price": 3554.0,
-      "change_pct": NaN,
-      "ma5": NaN,
-      "ma25": NaN,
-      "ma75": NaN,
-      "rsi": NaN,
-      "macd": 81.18540143325663,
-      "macd_sig": 51.485291604043766,
-      "macd_hist": 29.700109829212863,
-      "macd_prev": 37.125137286516086,
-      "bb_upper": NaN,
-      "bb_mid": NaN,
-      "bb_lower": NaN,
-      "atr": NaN,
-      "atr_pct": NaN,
-      "volume": 17093600.0,
-      "volume_ma5": 21097160.0
-    },
+    "ind": null,
     "predictions": {
       "bullish_price": 3720,
       "neutral_range": "3,480〜3,600",
@@ -65,10 +23,10 @@
       "scenario": "横ばい"
     },
     "cumulative": {
-      "win": 3,
-      "lose": 4,
-      "self_score_sum": 190,
-      "self_score_count": 4
+      "win": 0,
+      "lose": 0,
+      "self_score_sum": 0,
+      "self_score_count": 0
     }
   }
 }
