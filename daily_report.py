@@ -250,7 +250,8 @@ def generate_report(client, ind, prev_data):
         hit = "的中" if predicted_scenario == actual_scenario else "外れ"
 
         # ★修正③: 前回予測日と今回取得日を表示して透明性を上げる
-        prev_date = prev_data.get("ind", {}).get("last_trading_date", "前回") if prev_data else "前回"
+        prev_ind_safe = prev_data.get("ind") or {}
+        prev_date = prev_ind_safe.get("last_trading_date", "前回") if prev_data else "前回"
         curr_date = ind.get("last_trading_date", "今回")
         answer_text = f"""
 【前回予測の答え合わせ】（予測日: {prev_date} → 検証日: {curr_date}）
