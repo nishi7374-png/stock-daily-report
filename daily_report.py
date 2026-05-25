@@ -541,8 +541,12 @@ def build_note_text_single(date_str, r, previous):
     lines.append("━" * 30)
     lines.append("※本記事はAIによる市場観察記録であり、投資助言を目的とするものではありません。")
     lines.append("")
-    lines.append(f"#株式観察 #テクニカル分析 #定点観測 #AI予測検証 #{today.strftime('%Y%m%d')}")
-
+    tag_map = {
+    "Mitsubishi UFJ Financial Group, Inc.": "#UFJ",
+    "Sony Group Corporation": "#SONY",
+　　}
+　　extra_tag = tag_map.get(ind['name'], "")
+　　lines.append(f"#株式観察 #テクニカル分析 #定点観測 #AI予測検証 {extra_tag} #{today.strftime('%Y%m%d')}")
     text = "\n".join(lines)
     import re
     text = re.sub(r'\n{3,}', '\n\n', text)
