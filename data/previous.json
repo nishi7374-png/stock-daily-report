@@ -1,32 +1,76 @@
 {
   "8306.T": {
-    "ind": null,
+    "ind": {
+      "ticker": "8306.T",
+      "name": "Mitsubishi UFJ Financial Group, Inc.",
+      "price": 3066.0,
+      "prev_price": 3091.0,
+      "change_pct": -0.8087997411840828,
+      "ma5": 3072.4,
+      "ma25": 2900.48,
+      "ma75": 2809.281728515625,
+      "rsi": 67.65957446808511,
+      "macd": 73.50929436626211,
+      "macd_sig": 54.818093141070264,
+      "macd_hist": 18.691201225191847,
+      "macd_prev": 21.5891587928607,
+      "bb_upper": 3137.8024331424126,
+      "bb_mid": 2904.05,
+      "bb_lower": 2670.2975668575878,
+      "atr": 84.25,
+      "atr_pct": 2.747879973907371,
+      "volume": 32348200.0,
+      "volume_ma5": 46477660.0,
+      "last_trading_date": "2026-05-25"
+    },
     "predictions": {
-      "bullish_price": 3180,
-      "neutral_range": "3000〜3150",
-      "bearish_price": 2950,
+      "bullish_price": 3150,
+      "neutral_range": "3000〜3100",
+      "bearish_price": 2980,
       "scenario": "横ばい"
     },
     "cumulative": {
       "win": 0,
-      "lose": 0,
-      "self_score_sum": 0,
-      "self_score_count": 0
+      "lose": 1,
+      "self_score_sum": 35,
+      "self_score_count": 1
     }
   },
   "6758.T": {
-    "ind": null,
+    "ind": {
+      "ticker": "6758.T",
+      "name": "Sony Group Corporation",
+      "price": 3598.0,
+      "prev_price": 3525.0,
+      "change_pct": 2.070921985815603,
+      "ma5": 3600.6,
+      "ma25": 3389.08,
+      "ma75": 3377.26455078125,
+      "rsi": 68.11053024645257,
+      "macd": 79.67772786128353,
+      "macd_sig": 56.54539896660953,
+      "macd_hist": 23.132328894673996,
+      "macd_prev": 26.80821038480191,
+      "bb_upper": 3806.226595150011,
+      "bb_mid": 3392.75,
+      "bb_lower": 2979.273404849989,
+      "atr": 171.42857142857142,
+      "atr_pct": 4.764551735090923,
+      "volume": 16838300.0,
+      "volume_ma5": 20075660.0,
+      "last_trading_date": "2026-05-25"
+    },
     "predictions": {
-      "bullish_price": 3720,
-      "neutral_range": "3,480〜3,600",
+      "bullish_price": 3770,
+      "neutral_range": "3,430〜3,630",
       "bearish_price": 3340,
       "scenario": "横ばい"
     },
     "cumulative": {
       "win": 0,
-      "lose": 0,
-      "self_score_sum": 0,
-      "self_score_count": 0
+      "lose": 1,
+      "self_score_sum": 30,
+      "self_score_count": 1
     }
   }
 }
