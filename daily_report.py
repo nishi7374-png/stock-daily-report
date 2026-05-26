@@ -15,7 +15,7 @@ import pandas as pd
 import yfinance as yf
 from anthropic import Anthropic
 
-# ─── パス設定 ─────────────────────────────────────────────────────
+# --- パス設定 ---
 BASE_DIR    = Path(__file__).parent
 CONFIG_FILE = BASE_DIR / "config.json"
 PREV_FILE   = BASE_DIR / "data" / "previous.json"
@@ -27,7 +27,7 @@ REPORT_DIR.mkdir(exist_ok=True)
 NOTE_DIR.mkdir(exist_ok=True)
 (BASE_DIR / "data").mkdir(exist_ok=True)
 
-# ─── 市場開場チェック ─────────────────────────────────────────────
+# --- 市場開場チェック ---
 def get_jp_holidays(year):
     holidays = set()
     fixed = [
@@ -72,12 +72,12 @@ def is_market_open_today():
     return True
 
 
-# ─── 設定読み込み ─────────────────────────────────────────────────
+# --- 設定読み込み ---
 def load_config():
     with open(CONFIG_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
-# ─── 前日データ ───────────────────────────────────────────────────
+# --- 前日データ ---
 def load_previous():
     if PREV_FILE.exists():
         try:
@@ -90,7 +90,6 @@ def load_previous():
             return {}
     return {}
 
-# ★修正①: NaNを含むfloatをJSONに安全に保存できるよう変換する
 def sanitize_for_json(obj):
     """float の NaN / Inf を None に変換してJSON保存できるようにする"""
     if isinstance(obj, dict):
@@ -104,12 +103,11 @@ def sanitize_for_json(obj):
     return obj
 
 def save_previous(data):
-    # ★修正①: 保存前にNaN→Noneに変換する
     safe_data = sanitize_for_json(data)
     with open(PREV_FILE, "w", encoding="utf-8") as f:
         json.dump(safe_data, f, ensure_ascii=False, indent=2)
 
-# ─── テクニカル指標 ───────────────────────────────────────────────
+# --- テクニカル指標 ---
 def calc_rsi(close, period=14):
     delta = close.diff()
     gain = delta.clip(lower=0).rolling(period).mean()
@@ -145,7 +143,6 @@ def to_series(col_data):
         return col_data.iloc[:, 0]
     return col_data
 
-# ★修正②: 「最新の有効な取引日」のデータを取得する
 def fetch_indicators(ticker):
     for attempt in range(3):
         try:
@@ -164,7 +161,6 @@ def fetch_indicators(ticker):
             low    = to_series(df["Low"])
             volume = to_series(df["Volume"])
 
-            # ★修正②: NaNを除いた有効な行だけ残す
             valid_mask = close.notna() & high.notna() & low.notna() & volume.notna()
             close  = close[valid_mask]
             high   = high[valid_mask]
@@ -176,7 +172,6 @@ def fetch_indicators(ticker):
                 time.sleep(2)
                 continue
 
-            # ★修正②: iloc[-1] が必ず有効な取引日データになる
             price      = float(close.iloc[-1])
             prev_price = float(close.iloc[-2])
 
@@ -204,7 +199,6 @@ def fetch_indicators(ticker):
                 "atr_pct":    atr / price * 100,
                 "volume":     float(volume.iloc[-1]),
                 "volume_ma5": float(volume.rolling(5).mean().iloc[-1]),
-                # ★修正②: 実際に取得できた最終取引日を記録しておく
                 "last_trading_date": str(close.index[-1].date()),
             }
 
@@ -221,12 +215,11 @@ def fetch_indicators(ticker):
         time.sleep(2)
     return None
 
-# ─── Claude 観察レポート生成 ──────────────────────────────────────
+# --- Claude 観察レポート生成 ---
 def generate_report(client, ind, prev_data):
     prev_ind  = prev_data.get("ind")  if prev_data else None
     prev_pred = prev_data.get("predictions") if prev_data else None
 
-    # ★修正③: prev_ind に有効な price があるかチェック
     prev_price_valid = prev_ind and prev_ind.get("price") is not None
 
     if prev_price_valid:
@@ -249,7 +242,6 @@ def generate_report(client, ind, prev_data):
         actual_scenario  = "上昇" if ind["change_pct"] >= 0.5 else ("下落" if ind["change_pct"] <= -0.5 else "横ばい")
         hit = "的中" if predicted_scenario == actual_scenario else "外れ"
 
-        # ★修正③: 前回予測日と今回取得日を表示して透明性を上げる
         prev_ind_safe = prev_data.get("ind") or {}
         prev_date = prev_ind_safe.get("last_trading_date", "前回") if prev_data else "前回"
         curr_date = ind.get("last_trading_date", "今回")
@@ -346,7 +338,7 @@ def generate_report(client, ind, prev_data):
     )
     return message.content[0].text
 
-# ─── レスポンスパース ─────────────────────────────────────────────
+# --- レスポンスパース ---
 def parse_score(line):
     """行から0〜100のスコアを安全に抽出する"""
     stripped = line.strip()
@@ -440,7 +432,7 @@ def parse_report(raw_text):
     result["review"]  = result["review"].strip()
     return result
 
-# ─── 累計勝敗集計 ────────────────────────────────────────────────
+# --- 累計勝敗集計 ---
 def calc_cumulative_record(ticker, previous, current_hit):
     prev = previous.get(ticker, {})
     cum  = dict(prev.get("cumulative", {"win": 0, "lose": 0, "self_score_sum": 0, "self_score_count": 0}))
@@ -463,7 +455,7 @@ def calc_avg_self_score(previous, ticker, new_self_score):
     return round(total / count)
 
 
-# ─── note投稿用テキスト生成（1銘柄分） ───────────────────────────
+# --- note投稿用テキスト生成（1銘柄分） ---
 def build_note_text_single(date_str, r, previous):
     today  = datetime.date.today()
     ind    = r["ind"]
@@ -490,13 +482,13 @@ def build_note_text_single(date_str, r, previous):
 
     name_map = {
         "Mitsubishi UFJ Financial Group, Inc.": "UFJ",
-        "Sony Group Corporation": "ソニー",
+        "Sony Group Corporation": "Sony",
     }
     short_name = name_map.get(ind['name'], ind['name'])
     subtitle   = parsed.get("subtitle", "")
 
     lines = []
-    lines.append(f"【AIテクニカル分析定点観測　{short_name}　{day_num}日目】{subtitle}")
+    lines.append(f"【定点観測 {short_name} {day_num}日目】{subtitle}")
     lines.append("")
     lines.append(f"本日も「{short_name}」をAIでテクニカル分析しました。前日予測の結果と合わせて確認しながら、チャート指標を中心にAIの市場分析精度を日々検証しています。")
     lines.append("")
@@ -541,18 +533,14 @@ def build_note_text_single(date_str, r, previous):
     lines.append("━" * 30)
     lines.append("※本記事はAIによる市場観察記録であり、投資助言を目的とするものではありません。")
     lines.append("")
-    tag_map = {    
-        "Mitsubishi UFJ Financial Group, Inc.": "#UFJ",
-        "Sony Group Corporation": "#SONY",
-    }
-    extra_tag = tag_map.get(ind['name'], "")
-　　lines.append(f"#株式観察 #テクニカル分析 #定点観測 #AI予測検証 {extra_tag} #{today.strftime('%Y%m%d')}")
+    lines.append(f"#株式観察 #テクニカル分析 #定点観測 #AI予測検証 #{today.strftime('%Y%m%d')}")
+
     text = "\n".join(lines)
     import re
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text
 
-# ─── HTML生成 ─────────────────────────────────────────────────────
+# --- HTML生成 ---
 def build_report_html(date_str, results, previous):
     cards = ""
     for r in results:
@@ -574,7 +562,7 @@ def build_report_html(date_str, results, previous):
 
         cum_win, cum_lose, _, _ = calc_cumulative_record(ticker, previous, current_hit)
         cum_total = cum_win + cum_lose
-        cum_rate  = f"{int(cum_win/cum_total*100)}%" if cum_total > 0 else "―"
+        cum_rate  = f"{int(cum_win/cum_total*100)}%" if cum_total > 0 else "-"
 
         if pred and pred.get("scenario"):
             hit_cls = "hit" if current_hit else "miss"
@@ -603,7 +591,7 @@ def build_report_html(date_str, results, previous):
             </div>
           </div>"""
 
-        score_str = f"{parsed['score']}点" if parsed["score"] is not None else "―"
+        score_str = f"{parsed['score']}点" if parsed["score"] is not None else "-"
 
         cards += f"""
         <div class="card">
@@ -743,7 +731,7 @@ def build_index_html(report_files):
 </body>
 </html>"""
 
-# ─── 古いファイル削除 ─────────────────────────────────────────────
+# --- 古いファイル削除 ---
 def cleanup_old_files(days=10):
     cutoff = datetime.date.today() - datetime.timedelta(days=days)
 
@@ -765,7 +753,7 @@ def cleanup_old_files(days=10):
         except ValueError:
             pass
 
-# ─── メイン ───────────────────────────────────────────────────────
+# --- メイン ---
 def main():
     if not is_market_open_today():
         print("本日は市場休場のため処理を終了します。")
