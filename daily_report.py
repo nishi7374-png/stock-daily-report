@@ -543,7 +543,7 @@ def build_note_text_single(date_str, r, previous):
     lines.append("")
     tag_map = {
         "Mitsubishi UFJ Financial Group, Inc.": "#UFJ",
-        "Sony Group Corporation": "#SONY",
+        "Sony Group Corporation": "#SONY",  
     }
 　　extra_tag = tag_map.get(ind['name'], "")
 　　lines.append(f"#株式観察 #テクニカル分析 #定点観測 #AI予測検証 {extra_tag} #{today.strftime('%Y%m%d')}")
