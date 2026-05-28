@@ -30,10 +30,10 @@
       "scenario": "横ばい"
     },
     "cumulative": {
-      "win": 1,
-      "lose": 1,
-      "self_score_sum": 110,
-      "self_score_count": 2
+      "win": 0,
+      "lose": 0,
+      "self_score_sum": 0,
+      "self_score_count": 0
     }
   },
   "6758.T": {
@@ -68,9 +68,9 @@
     },
     "cumulative": {
       "win": 0,
-      "lose": 2,
-      "self_score_sum": 50,
-      "self_score_count": 2
+      "lose": 0,
+      "self_score_sum": 0,
+      "self_score_count": 0
     }
   }
 }
