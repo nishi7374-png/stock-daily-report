@@ -43,11 +43,13 @@
     .review { font-size: 0.85rem; color: #adbac7; margin-top: 0.5rem; line-height: 1.7; }
     .pred-box { background: #21262d; border-radius: 6px; padding: 0.8rem 1rem; }
     .pred-label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
-    .pred-scenarios { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .pred-scenarios { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
     .scenario { font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
     .up-s { background: rgba(63,185,80,0.15); color: var(--up); }
     .neu-s { background: rgba(88,166,255,0.15); color: var(--accent); }
     .down-s { background: rgba(248,81,73,0.15); color: var(--down); }
+    .scenario-main { display: inline-block; margin-top: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--text); background: rgba(88,166,255,0.2); border: 1px solid var(--accent); border-radius: 4px; padding: 0.2rem 0.6rem; }
+    .scoring-note { margin-top: 0.6rem; font-size: 0.75rem; color: var(--muted); line-height: 1.6; }
     footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
@@ -80,24 +82,26 @@
             <div class="metric"><span class="label">出来高比</span><span class="value">114%</span></div>
           </div>
           <div class="report-body">
-            <div class="score-badge">上昇期待度 <strong>55点</strong></div>
-            <div class="cum-record">予測精度：1勝1敗（的中率 50%）</div>
-            <p class="comment">前日比-1.62%で5日線を下抜け反落。MACDヒストグラムは1.938とプラスを維持するも前日の9.573から大幅縮小し、上昇モメンタムの鈍化が顕著。RSIは69.0から63.5へ低下し過熱感が後退。出来高は5日平均比114%と増加しており、利益確定の動きが活発化した可能性。ATRは81.50円（2.73%）で値動きはやや荒い。</p>
+            <div class="score-badge">上昇期待度 <strong>57点</strong></div>
+            <div class="cum-record">予測精度：0勝1敗（的中率 0%）</div>
+            <p class="comment">前日比-1.62%下落し2,982円で終了。MACDヒストは1.938と前日9.573から大幅縮小し、上昇モメンタムの減速が鮮明。出来高は5日平均比114%と活発だが、RSI63.5と依然上昇余地あり。ATR81.50円（株価比2.73%）は標準的なボラティリティ水準で、MA25・MA75は上回るが5日線は下回る調整局面。</p>
             
           <div class="answer-box miss">
             <span class="answer-label">前回予測の答え合わせ</span>
             <span class="answer-result">❌ 外れ</span>
             <span class="answer-detail">予測：横ばい → 実際：下落</span>
-            <p class="review">横ばいシナリオを予測したが実際は下落。RSI69.0の過熱感とMACDヒストの高水準から調整リスクを織り込むべきだった。出来高増加を伴う下落で、前日の3,061円が短期的な天井となった形。</p>
+            <p class="review">横ばいシナリオを予測したが実際は-1.62%の下落。MACDヒストの大幅縮小（9.573→1.938）により上昇モメンタムが想定以上に弱まり、5日線を割り込む調整入りとなった。出来高増加が売り圧力を示していた。</p>
           </div>
             
           <div class="pred-box">
             <span class="pred-label">明日の予測シナリオ（ATR基準）</span>
             <div class="pred-scenarios">
               <span class="scenario up-s">上昇 3,064円</span>
-              <span class="scenario neu-s">横ばい 2,900〜3,064円</span>
-              <span class="scenario down-s">下落 2,900円</span>
+              <span class="scenario neu-s">横ばい 2,900〜3,050円</span>
+              <span class="scenario down-s">下落 2,820円</span>
             </div>
+            <span class="scenario-main">最有力：横ばい</span>
+            <p class="scoring-note">※採点ルール：翌日の前日比が+0.5%以上→上昇、-0.5%以下→下落、それ以外→横ばいと判定し、最有力シナリオと照合します。</p>
           </div>
           </div>
         </div>
@@ -122,24 +126,26 @@
             <div class="metric"><span class="label">出来高比</span><span class="value">135%</span></div>
           </div>
           <div class="report-body">
-            <div class="score-badge">上昇期待度 <strong>52点</strong></div>
-            <div class="cum-record">予測精度：0勝2敗（的中率 0%）</div>
-            <p class="comment">株価は前日比2.10%の下落。MACDヒストグラムが前日の+8.537から-1.830へ急転し、勢いの転換を示唆。出来高は5日平均比135%と活発で、調整局面への関心の高さが窺える。ATRは160.93円（株価比4.66%）と高水準を維持しており、引き続き値動きの荒い状態が続いている。</p>
+            <div class="score-badge">上昇期待度 <strong>50点</strong></div>
+            <div class="cum-record">予測精度：0勝1敗（的中率 0%）</div>
+            <p class="comment">前日比-2.10%の下落で終了。MACDヒストが8.537から-1.830へ急速に悪化し、上昇モメンタムが失速。ただし出来高は5日平均比135%と高水準を維持し、売買が活発な状態。ATRは株価比4.66%で中程度のボラティリティを示し、やや荒い値動きが続いている。RSIは61.6で健全圏を維持。</p>
             
           <div class="answer-box miss">
             <span class="answer-label">前回予測の答え合わせ</span>
             <span class="answer-result">❌ 外れ</span>
             <span class="answer-detail">予測：横ばい → 実際：下落</span>
-            <p class="review">横ばいを最有力シナリオとしていたが、実際は2.10%の下落。MACDヒストグラムの急速な縮小兆候を見逃し、出来高急増に伴う調整圧力を過小評価した。RSIの65超えによる過熱感が売り圧力につながった可能性が高い。</p>
+            <p class="review">横ばいを予想したが実際は-2.10%の下落。MACDヒストが前日プラス圏から急速にマイナス転換したことで下落圧力が強まった。出来高増加が伴ったことで調整売りの勢いを見誤った形となった。</p>
           </div>
             
           <div class="pred-box">
             <span class="pred-label">明日の予測シナリオ（ATR基準）</span>
             <div class="pred-scenarios">
               <span class="scenario up-s">上昇 3,612円</span>
-              <span class="scenario neu-s">横ばい 3,370〜3,530円</span>
+              <span class="scenario neu-s">横ばい 3,290〜3,612円</span>
               <span class="scenario down-s">下落 3,290円</span>
             </div>
+            <span class="scenario-main">最有力：横ばい</span>
+            <p class="scoring-note">※採点ルール：翌日の前日比が+0.5%以上→上昇、-0.5%以下→下落、それ以外→横ばいと判定し、最有力シナリオと照合します。</p>
           </div>
           </div>
         </div>
