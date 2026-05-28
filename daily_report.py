@@ -91,7 +91,6 @@ def load_previous():
     return {}
 
 def sanitize_for_json(obj):
-    """float の NaN / Inf を None に変換してJSON保存できるようにする"""
     if isinstance(obj, dict):
         return {k: sanitize_for_json(v) for k, v in obj.items()}
     if isinstance(obj, list):
@@ -138,7 +137,6 @@ def calc_atr(high, low, close, period=14):
     return float(tr.rolling(period).mean().iloc[-1])
 
 def to_series(col_data):
-    """DataFrameまたはSeriesをSeriesに変換する。マルチインデックス対策。"""
     if isinstance(col_data, pd.DataFrame):
         return col_data.iloc[:, 0]
     return col_data
@@ -340,7 +338,6 @@ def generate_report(client, ind, prev_data):
 
 # --- レスポンスパース ---
 def parse_score(line):
-    """行から0〜100のスコアを安全に抽出する"""
     stripped = line.strip()
     if not stripped:
         return None
@@ -487,6 +484,9 @@ def build_note_text_single(date_str, r, previous):
     short_name = name_map.get(ind['name'], ind['name'])
     subtitle   = parsed.get("subtitle", "")
 
+    p = parsed["predictions"]
+    scenario = p.get("scenario", "")
+
     lines = []
     lines.append(f"【定点観測 {short_name} {day_num}日目】{subtitle}")
     lines.append("")
@@ -505,7 +505,6 @@ def build_note_text_single(date_str, r, previous):
     lines.append(parsed["comment"] if parsed["comment"] else "（取得できませんでした）")
     lines.append("")
 
-    p = parsed["predictions"]
     if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
         lines.append("【明日の予測シナリオ】")
         if p["bullish_price"]:
@@ -514,6 +513,10 @@ def build_note_text_single(date_str, r, previous):
             lines.append(f"横ばい　：{p['neutral_range']}円")
         if p["bearish_price"]:
             lines.append(f"下落　　：{p['bearish_price']:,}円")
+        if scenario:
+            lines.append(f"最有力　：{scenario}")
+        lines.append("")
+        lines.append("※採点ルール：翌日の前日比が+0.5%以上→上昇、-0.5%以下→下落、それ以外→横ばいと判定し、最有力シナリオと照合します。")
         lines.append("")
 
     if pred and pred.get("scenario"):
@@ -579,8 +582,10 @@ def build_report_html(date_str, results, previous):
             answer_html = ""
 
         p = parsed["predictions"]
+        scenario = p.get("scenario", "")
         pred_html = ""
         if p["bullish_price"] or p["neutral_range"] or p["bearish_price"]:
+            scenario_badge = f'<span class="scenario-main">最有力：{scenario}</span>' if scenario else ""
             pred_html = f"""
           <div class="pred-box">
             <span class="pred-label">明日の予測シナリオ（ATR基準）</span>
@@ -589,6 +594,8 @@ def build_report_html(date_str, results, previous):
               <span class="scenario neu-s">横ばい {p['neutral_range']}円</span>
               <span class="scenario down-s">下落 {p['bearish_price']:,}円</span>
             </div>
+            {scenario_badge}
+            <p class="scoring-note">※採点ルール：翌日の前日比が+0.5%以上→上昇、-0.5%以下→下落、それ以外→横ばいと判定し、最有力シナリオと照合します。</p>
           </div>"""
 
         score_str = f"{parsed['score']}点" if parsed["score"] is not None else "-"
@@ -668,11 +675,13 @@ def build_report_html(date_str, results, previous):
     .review {{ font-size: 0.85rem; color: #adbac7; margin-top: 0.5rem; line-height: 1.7; }}
     .pred-box {{ background: #21262d; border-radius: 6px; padding: 0.8rem 1rem; }}
     .pred-label {{ display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }}
-    .pred-scenarios {{ display: flex; gap: 0.6rem; flex-wrap: wrap; }}
+    .pred-scenarios {{ display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.6rem; }}
     .scenario {{ font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }}
     .up-s {{ background: rgba(63,185,80,0.15); color: var(--up); }}
     .neu-s {{ background: rgba(88,166,255,0.15); color: var(--accent); }}
     .down-s {{ background: rgba(248,81,73,0.15); color: var(--down); }}
+    .scenario-main {{ display: inline-block; margin-top: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--text); background: rgba(88,166,255,0.2); border: 1px solid var(--accent); border-radius: 4px; padding: 0.2rem 0.6rem; }}
+    .scoring-note {{ margin-top: 0.6rem; font-size: 0.75rem; color: var(--muted); line-height: 1.6; }}
     footer {{ text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }}
     a {{ color: var(--accent); text-decoration: none; }}
     a:hover {{ text-decoration: underline; }}
