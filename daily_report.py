@@ -472,8 +472,7 @@ def build_note_text_single(date_str, r, previous):
         current_hit = None
 
     cum_win, cum_lose, ss_sum, ss_count = calc_cumulative_record(ticker, previous, current_hit)
-    cum_total = cum_win + cum_lose
-    day_num = cum_total + 1
+    day_num = previous.get(ticker, {}).get("cumulative", {}).get("day", 1)
     self_score     = parsed.get("self_score")
     avg_self_score = calc_avg_self_score(previous, ticker, self_score)
 
@@ -811,11 +810,12 @@ def main():
         new_prev[ticker] = {
             "ind":         ind,
             "predictions": parsed["predictions"],
-            "cumulative":  {
+            "cumulative": {
                 "win":              cum_win,
                 "lose":             cum_lose,
                 "self_score_sum":   new_ss_sum,
                 "self_score_count": new_ss_count,
+                "day":              day_num + 1,
             },
         }
 
