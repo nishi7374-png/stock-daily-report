@@ -33,7 +33,7 @@
       "win": 0,
       "lose": 2,
       "self_score_sum": 55,
-      "self_score_count": 2
+      "self_score_count": 2,
       "day": 5
     }
   },
@@ -71,7 +71,7 @@
       "win": 1,
       "lose": 1,
       "self_score_sum": 100,
-      "self_score_count": 2
+      "self_score_count": 2,
       "day": 5
     }
   }
