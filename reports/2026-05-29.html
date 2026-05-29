@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>観察レポート 2026年05月18日</title>
+  <title>観察レポート 2026年05月29日</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
     :root {
@@ -43,11 +43,13 @@
     .review { font-size: 0.85rem; color: #adbac7; margin-top: 0.5rem; line-height: 1.7; }
     .pred-box { background: #21262d; border-radius: 6px; padding: 0.8rem 1rem; }
     .pred-label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
-    .pred-scenarios { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .pred-scenarios { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
     .scenario { font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
     .up-s { background: rgba(63,185,80,0.15); color: var(--up); }
     .neu-s { background: rgba(88,166,255,0.15); color: var(--accent); }
     .down-s { background: rgba(248,81,73,0.15); color: var(--down); }
+    .scenario-main { display: inline-block; margin-top: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--text); background: rgba(88,166,255,0.2); border: 1px solid var(--accent); border-radius: 4px; padding: 0.2rem 0.6rem; }
+    .scoring-note { margin-top: 0.6rem; font-size: 0.75rem; color: var(--muted); line-height: 1.6; }
     footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
@@ -57,47 +59,49 @@
   <div class="container">
     <header>
       <h1>📊 株式定点観察レポート</h1>
-      <h2>2026年05月18日</h2>
+      <h2>2026年05月29日</h2>
     </header>
     
         <div class="card">
           <div class="card-header">
             <div class="ticker-info">
-              <span class="ticker">4502.T</span>
-              <span class="name">Takeda Pharmaceutical Company Limited</span>
+              <span class="ticker">8306.T</span>
+              <span class="name">Mitsubishi UFJ Financial Group, Inc.</span>
             </div>
             <div class="price-info">
-              <span class="price">5,249.00</span>
-              <span class="change down">-0.53%</span>
+              <span class="price">2,999.00</span>
+              <span class="change up">+0.57%</span>
             </div>
           </div>
           <div class="metrics">
-            <div class="metric"><span class="label">RSI</span><span class="value">44.4</span></div>
-            <div class="metric"><span class="label">MA5</span><span class="value">5,228</span></div>
-            <div class="metric"><span class="label">MA25</span><span class="value">5,414</span></div>
-            <div class="metric"><span class="label">MACDヒスト</span><span class="value">2.587</span></div>
-            <div class="metric"><span class="label">ATR</span><span class="value">104.07円</span></div>
-            <div class="metric"><span class="label">出来高比</span><span class="value">80%</span></div>
+            <div class="metric"><span class="label">RSI</span><span class="value">61.6</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">3,028</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">2,919</span></div>
+            <div class="metric"><span class="label">MACDヒスト</span><span class="value">-2.423</span></div>
+            <div class="metric"><span class="label">ATR</span><span class="value">81.29円</span></div>
+            <div class="metric"><span class="label">出来高比</span><span class="value">164%</span></div>
           </div>
           <div class="report-body">
-            <div class="score-badge">上昇期待度 <strong>0点</strong></div>
-            <div class="cum-record">予測精度：2勝2敗（的中率 50%）</div>
-            <p class="comment">株価は5,249円と前日比-0.53%の小幅安。MACDヒストは僅かにプラス転換し2.587と改善傾向を示す。出来高は5日平均の80%と低調で市場参加者の様子見姿勢が窺える。ATRは104.07円（株価比1.98%）と比較的落ち着いた水準で、レンジ相場の膠着感が継続している。全移動平均線を下回る弱含みの構造は変わらず。</p>
+            <div class="score-badge">上昇期待度 <strong>55点</strong></div>
+            <div class="cum-record">予測精度：0勝2敗（的中率 0%）</div>
+            <p class="comment">株価は前日比+0.57%と小幅上昇し3,000円目前で推移。出来高は5日平均比164%と急増し活発な売買が見られた。しかしMACDヒストがプラスからマイナスに転じ上昇の勢いに陰りが見られる。RSIは61.6と健全圏を維持。ATRは81.29円（株価比2.71%）とやや高めで値動きの荒さが継続している。</p>
             
           <div class="answer-box miss">
-            <span class="answer-label">昨日の予測答え合わせ</span>
+            <span class="answer-label">前回予測の答え合わせ</span>
             <span class="answer-result">❌ 外れ</span>
-            <span class="answer-detail">予測：横ばい → 実際：下落</span>
-            <p class="review">横ばいシナリオ（5,145〜5,350円）を予測したが実際は5,249円で範囲内。ただし判定が「外れ・下落」となっている点は、出来高の低調さと全MA下回りという弱材料を軽視した結果と考えられる。MACDの僅かな改善だけでは上昇力不足であった。</p>
+            <span class="answer-detail">予測：横ばい → 実際：上昇</span>
+            <p class="review">横ばいシナリオを予測したが実際は上昇。出来高急増が買い圧力を示唆していたが、MA5を下回る位置からのMACDヒスト縮小を過大評価し、上昇エネルギーを見逃した。</p>
           </div>
             
           <div class="pred-box">
             <span class="pred-label">明日の予測シナリオ（ATR基準）</span>
             <div class="pred-scenarios">
-              <span class="scenario up-s">上昇 5,355円</span>
-              <span class="scenario neu-s">横ばい 5,145〜5,320円</span>
-              <span class="scenario down-s">下落 5,145円</span>
+              <span class="scenario up-s">上昇 3,080円</span>
+              <span class="scenario neu-s">横ばい 2,920〜3,080円</span>
+              <span class="scenario down-s">下落 2,918円</span>
             </div>
+            <span class="scenario-main">最有力：横ばい</span>
+            <p class="scoring-note">※採点ルール：翌日の前日比が+0.5%以上→上昇、-0.5%以下→下落、それ以外→横ばいと判定し、最有力シナリオと照合します。</p>
           </div>
           </div>
         </div>
@@ -105,41 +109,43 @@
         <div class="card">
           <div class="card-header">
             <div class="ticker-info">
-              <span class="ticker">9984.T</span>
-              <span class="name">SoftBank Group Corp.</span>
+              <span class="ticker">6758.T</span>
+              <span class="name">Sony Group Corporation</span>
             </div>
             <div class="price-info">
-              <span class="price">5,593.00</span>
-              <span class="change down">-2.65%</span>
+              <span class="price">3,444.00</span>
+              <span class="change down">-0.20%</span>
             </div>
           </div>
           <div class="metrics">
-            <div class="metric"><span class="label">RSI</span><span class="value">49.6</span></div>
-            <div class="metric"><span class="label">MA5</span><span class="value">5,821</span></div>
-            <div class="metric"><span class="label">MA25</span><span class="value">5,182</span></div>
-            <div class="metric"><span class="label">MACDヒスト</span><span class="value">-47.675</span></div>
-            <div class="metric"><span class="label">ATR</span><span class="value">438.57円</span></div>
-            <div class="metric"><span class="label">出来高比</span><span class="value">83%</span></div>
+            <div class="metric"><span class="label">RSI</span><span class="value">53.0</span></div>
+            <div class="metric"><span class="label">MA5</span><span class="value">3,513</span></div>
+            <div class="metric"><span class="label">MA25</span><span class="value">3,407</span></div>
+            <div class="metric"><span class="label">MACDヒスト</span><span class="value">-9.254</span></div>
+            <div class="metric"><span class="label">ATR</span><span class="value">140.50円</span></div>
+            <div class="metric"><span class="label">出来高比</span><span class="value">195%</span></div>
           </div>
           <div class="report-body">
-            <div class="score-badge">上昇期待度 <strong>45点</strong></div>
-            <div class="cum-record">予測精度：2勝2敗（的中率 50%）</div>
-            <p class="comment">株価は前日比-2.65%と下落し、5日線を下回った。MACDヒストは-47.675とマイナス幅が拡大し、下落の勢いが強まっている。出来高は5日平均の83%と低調で、積極的な売買は見られない。ATRは438.57円（株価比7.84%）と高水準にあり、引き続き値動きの荒い不安定な状態が続いている。RSIは49.6と中立圏。</p>
+            <div class="score-badge">上昇期待度 <strong>35点</strong></div>
+            <div class="cum-record">予測精度：1勝1敗（的中率 50%）</div>
+            <p class="comment">前日比0.20%安の小幅下落。出来高は5日平均の195%と大幅に増加したが、RSIは61.6から53.0へ急低下し、MACDヒストも-1.8から-9.3へマイナス拡大。ATRは140.50円（株価比4.08%）とやや落ち着き、値動きは中程度の変動圏。出来高急増にもかかわらず株価が下落した点は調整圧力を示唆。</p>
             
-          <div class="answer-box miss">
-            <span class="answer-label">昨日の予測答え合わせ</span>
-            <span class="answer-result">❌ 外れ</span>
-            <span class="answer-detail">予測：横ばい → 実際：下落</span>
-            <p class="review">横ばいを予測したが実際は-2.65%の下落となった。MACDヒストのマイナス幅拡大と5日線下抜けの勢いを軽視した。出来高が低調だったものの、売り圧力が勝る展開となり、ボリンジャーミッド付近での支持も機能しなかった。</p>
+          <div class="answer-box hit">
+            <span class="answer-label">前回予測の答え合わせ</span>
+            <span class="answer-result">✅ 的中</span>
+            <span class="answer-detail">予測：横ばい → 実際：横ばい</span>
+            <p class="review">横ばいシナリオが的中。MACDヒストのマイナス継続とMA5下での推移から上昇は限定的と判断したが、実際には出来高急増を伴いながらも株価は横ばい圏に留まり、調整局面の継続が確認された。</p>
           </div>
             
           <div class="pred-box">
             <span class="pred-label">明日の予測シナリオ（ATR基準）</span>
             <div class="pred-scenarios">
-              <span class="scenario up-s">上昇 6,031円</span>
-              <span class="scenario neu-s">横ばい 5,400〜5,800円</span>
-              <span class="scenario down-s">下落 5,154円</span>
+              <span class="scenario up-s">上昇 3,585円</span>
+              <span class="scenario neu-s">横ばい 3305〜3585円</span>
+              <span class="scenario down-s">下落 3,305円</span>
             </div>
+            <span class="scenario-main">最有力：横ばい</span>
+            <p class="scoring-note">※採点ルール：翌日の前日比が+0.5%以上→上昇、-0.5%以下→下落、それ以外→横ばいと判定し、最有力シナリオと照合します。</p>
           </div>
           </div>
         </div>
