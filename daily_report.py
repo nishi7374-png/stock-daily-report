@@ -487,7 +487,7 @@ def build_note_text_single(date_str, r, previous):
     scenario = p.get("scenario", "")
 
     lines = []
-    lines.append(f"【定点観測 {short_name} {day_num}日目】{subtitle}")
+    lines.append(f"【AIテクニカル分定点観測 {short_name} {day_num}日目】{subtitle}")
     lines.append("")
     lines.append(f"本日も「{short_name}」をAIでテクニカル分析しました。前日予測の結果と合わせて確認しながら、チャート指標を中心にAIの市場分析精度を日々検証しています。")
     lines.append("")
