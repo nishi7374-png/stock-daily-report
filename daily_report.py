@@ -804,6 +804,7 @@ def main():
             current_hit = None
 
         cum_win, cum_lose, ss_sum, ss_count = calc_cumulative_record(ticker, previous, current_hit)
+        day_num = previous.get(ticker, {}).get("cumulative", {}).get("day", 1)
         new_ss_sum   = ss_sum   + (parsed["self_score"] or 0)
         new_ss_count = ss_count + (1 if parsed["self_score"] is not None else 0)
 
