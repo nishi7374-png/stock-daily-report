@@ -2,6 +2,7 @@
 株式定点観察レポート - 毎日自動生成スクリプト
 対象銘柄はconfig.jsonで管理
 土日・日本市場の祝日は自動スキップ
+金曜日は週次振り返りnoteテキストも生成
 """
 
 import os
@@ -70,6 +71,10 @@ def is_market_open_today():
         print(f"[スキップ] 本日（{today}）は日本の祝日のため市場休場です。")
         return False
     return True
+
+
+def is_friday():
+    return datetime.date.today().weekday() == 4
 
 
 # --- 設定読み込み ---
@@ -335,6 +340,136 @@ def generate_report(client, ind, prev_data):
         messages=[{"role": "user", "content": prompt}],
     )
     return message.content[0].text
+
+# --- 週次振り返り生成 ---
+def collect_weekly_data(today):
+    """今週月曜〜今日のnoteテキストファイルを収集する"""
+    monday = today - datetime.timedelta(days=today.weekday())
+    weekly_notes = []
+
+    for i in range(5):  # 月〜金
+        day = monday + datetime.timedelta(days=i)
+        if day > today:
+            break
+        for note_file in sorted(NOTE_DIR.glob(f"{day.strftime('%Y-%m-%d')}_*.txt")):
+            try:
+                text = note_file.read_text(encoding="utf-8")
+                weekly_notes.append({
+                    "date": day.strftime("%Y年%m月%d日"),
+                    "ticker": note_file.stem[11:],  # 日付部分を除いたティッカー
+                    "text": text,
+                })
+            except Exception:
+                pass
+
+    return weekly_notes
+
+
+def generate_weekly_review(client, weekly_notes, today):
+    """週次振り返りnoteテキストをClaudeに生成させる"""
+    if not weekly_notes:
+        print("[週次振り返り] 今週のデータが見つかりませんでした。スキップします。")
+        return None
+
+    # 銘柄ごとに整理
+    tickers_data = {}
+    for note in weekly_notes:
+        t = note["ticker"]
+        if t not in tickers_data:
+            tickers_data[t] = []
+        tickers_data[t].append(f"【{note['date']}】\n{note['text']}")
+
+    summary_text = ""
+    for ticker, entries in tickers_data.items():
+        summary_text += f"\n\n=== {ticker} ===\n"
+        summary_text += "\n---\n".join(entries)
+
+    week_start = (today - datetime.timedelta(days=today.weekday())).strftime("%m月%d日")
+    week_end   = today.strftime("%m月%d日")
+
+    prompt = f"""あなたは株式観察ブログのライターです。
+以下は今週（{week_start}〜{week_end}）の日次観察レポートです。
+これをもとに、noteに投稿する「週次振り返り記事」を書いてください。
+
+【執筆ルール】
+・読みやすくカジュアルなトーンで書くこと
+・専門用語は使いすぎず、初心者にも読みやすくすること
+・「今週AIはどうだったか」という視点を軸にすること
+・投資推奨・売買アドバイスは一切書かないこと
+・的中・外れの振り返りを正直に書くこと（外れても面白く）
+・文字数は800〜1200字程度
+・最後に来週への一言コメントを添えること
+
+【構成】
+1. 今週の一言まとめ（2〜3行）
+2. 銘柄ごとの今週の動き（各100〜200字）
+3. AI予測の精度振り返り（的中・外れのエピソードを交えて）
+4. 来週への一言
+
+【今週のデータ】
+{summary_text}
+
+出力形式：
+---タイトル---
+（noteのタイトル候補。例：「AIは今週も外した？UFJ・Sony週次振り返り【〇月〇週】」）
+
+---本文---
+（本文をここに書く）
+
+---ハッシュタグ---
+（#をつけて5〜8個）
+"""
+
+    print("[週次振り返り] Claudeで生成中...")
+    message = client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=2000,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return message.content[0].text
+
+
+def save_weekly_note(raw_text, today):
+    """週次振り返りテキストをnoteフォルダに保存"""
+    lines      = raw_text.splitlines()
+    title      = ""
+    body       = ""
+    hashtags   = ""
+    section    = None
+
+    for line in lines:
+        stripped = line.strip()
+        if "---タイトル---" in stripped:
+            section = "title"; continue
+        elif "---本文---" in stripped:
+            section = "body"; continue
+        elif "---ハッシュタグ---" in stripped:
+            section = "hashtag"; continue
+
+        if section == "title" and stripped and not title:
+            title = stripped
+        elif section == "body":
+            body += line + "\n"
+        elif section == "hashtag" and stripped:
+            hashtags += stripped + " "
+
+    output = f"""【noteタイトル候補】
+{title}
+
+==================================================
+【ここから本文をコピーしてnoteに貼ってください】
+==================================================
+
+{body.strip()}
+
+{hashtags.strip()}
+"""
+
+    note_path = NOTE_DIR / f"{today.strftime('%Y-%m-%d')}_weekly.txt"
+    with open(note_path, "w", encoding="utf-8") as f:
+        f.write(output)
+    print(f"週次振り返りnote保存: {note_path}")
+
 
 # --- レスポンスパース ---
 def parse_score(line):
@@ -836,6 +971,14 @@ def main():
         with open(note_path, "w", encoding="utf-8") as f:
             f.write(note_text)
         print(f"note用テキスト保存: {note_path}")
+
+    # --- 金曜日は週次振り返りを生成 ---
+    if is_friday():
+        print("[週次振り返り] 本日は金曜日のため週次レポートを生成します。")
+        weekly_notes = collect_weekly_data(today)
+        weekly_raw   = generate_weekly_review(client, weekly_notes, today)
+        if weekly_raw:
+            save_weekly_note(weekly_raw, today)
 
     existing = sorted(
         [(p.name, p.stem.replace("-", "年", 1).replace("-", "月", 1) + "日")
