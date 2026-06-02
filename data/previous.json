@@ -25,16 +25,16 @@
     },
     "predictions": {
       "bullish_price": 3128,
-      "neutral_range": "2964〜3128",
+      "neutral_range": "2,964〜3,128",
       "bearish_price": 2964,
       "scenario": "横ばい"
     },
     "cumulative": {
       "win": 0,
-      "lose": 6,
-      "self_score_sum": 165,
-      "self_score_count": 6,
-      "day": 9
+      "lose": 7,
+      "self_score_sum": 190,
+      "self_score_count": 7,
+      "day": 10
     }
   },
   "6758.T": {
@@ -65,14 +65,14 @@
       "bullish_price": 3801,
       "neutral_range": "3,537〜3,801",
       "bearish_price": 3537,
-      "scenario": "横ばい"
+      "scenario": "上昇"
     },
     "cumulative": {
       "win": 2,
-      "lose": 4,
-      "self_score_sum": 260,
-      "self_score_count": 6,
-      "day": 9
+      "lose": 5,
+      "self_score_sum": 285,
+      "self_score_count": 7,
+      "day": 10
     }
   }
 }
