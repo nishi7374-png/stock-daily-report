@@ -31,10 +31,10 @@
     },
     "cumulative": {
       "win": 0,
-      "lose": 13,
-      "self_score_sum": 345,
-      "self_score_count": 13,
-      "day": 16
+      "lose": 14,
+      "self_score_sum": 370,
+      "self_score_count": 14,
+      "day": 17
     }
   },
   "6758.T": {
@@ -62,17 +62,17 @@
       "last_trading_date": "2026-06-08"
     },
     "predictions": {
-      "bullish_price": 3620,
-      "neutral_range": "3,396〜3,620",
-      "bearish_price": 3396,
-      "scenario": "下落"
+      "bullish_price": 3630,
+      "neutral_range": "3,400〜3,620",
+      "bearish_price": 3290,
+      "scenario": "横ばい"
     },
     "cumulative": {
-      "win": 2,
+      "win": 3,
       "lose": 11,
-      "self_score_sum": 435,
-      "self_score_count": 13,
-      "day": 16
+      "self_score_sum": 520,
+      "self_score_count": 14,
+      "day": 17
     }
   }
 }
