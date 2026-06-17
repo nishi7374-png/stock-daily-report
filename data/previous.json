@@ -31,10 +31,10 @@
     },
     "cumulative": {
       "win": 5,
-      "lose": 19,
-      "self_score_sum": 920,
-      "self_score_count": 24,
-      "day": 27
+      "lose": 20,
+      "self_score_sum": 945,
+      "self_score_count": 25,
+      "day": 28
     }
   },
   "6758.T": {
@@ -68,11 +68,11 @@
       "scenario": "横ばい"
     },
     "cumulative": {
-      "win": 6,
+      "win": 7,
       "lose": 18,
-      "self_score_sum": 965,
-      "self_score_count": 24,
-      "day": 27
+      "self_score_sum": 1050,
+      "self_score_count": 25,
+      "day": 28
     }
   }
 }
