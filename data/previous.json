@@ -31,10 +31,10 @@
     },
     "cumulative": {
       "win": 5,
-      "lose": 24,
-      "self_score_sum": 1045,
-      "self_score_count": 29,
-      "day": 32
+      "lose": 25,
+      "self_score_sum": 1070,
+      "self_score_count": 30,
+      "day": 33
     }
   },
   "6758.T": {
@@ -69,10 +69,10 @@
     },
     "cumulative": {
       "win": 7,
-      "lose": 22,
-      "self_score_sum": 1150,
-      "self_score_count": 29,
-      "day": 32
+      "lose": 23,
+      "self_score_sum": 1185,
+      "self_score_count": 30,
+      "day": 33
     }
   }
 }
