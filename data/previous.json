@@ -10,10 +10,10 @@
       "ma25": 3536.7091015625,
       "ma75": 3545.45611328125,
       "rsi": 37.17816683831102,
-      "macd": -60.935076786310674,
-      "macd_sig": -36.51810454846459,
-      "macd_hist": -24.416972237846082,
-      "macd_prev": -20.509358477004692,
+      "macd": -60.93851763591192,
+      "macd_sig": -36.52316447034053,
+      "macd_hist": -24.41535316557139,
+      "macd_prev": -20.50760989761706,
       "bb_upper": 3757.7685846365403,
       "bb_mid": 3524.2045166015623,
       "bb_lower": 3290.6404485665844,
@@ -25,16 +25,16 @@
     },
     "predictions": {
       "bullish_price": 3394,
-      "neutral_range": "3196〜3394",
+      "neutral_range": "3,196〜3,345",
       "bearish_price": 3196,
       "scenario": "横ばい"
     },
     "cumulative": {
       "win": 20,
-      "lose": 95,
-      "self_score_sum": 4070,
-      "self_score_count": 115,
-      "day": 118
+      "lose": 96,
+      "self_score_sum": 4090,
+      "self_score_count": 116,
+      "day": 119
     }
   },
   "6758.T": {
@@ -48,11 +48,11 @@
       "ma25": 3811.02423828125,
       "ma75": 3700.3836067708335,
       "rsi": 83.80281690140845,
-      "macd": 87.18249096249701,
-      "macd_sig": 53.07907155386911,
-      "macd_hist": 34.1034194086279,
-      "macd_prev": 30.119944911424334,
-      "bb_upper": 4111.984594775236,
+      "macd": 87.18937551684485,
+      "macd_sig": 53.089195612692805,
+      "macd_hist": 34.10017990415204,
+      "macd_prev": 30.116446281911358,
+      "bb_upper": 4111.984594775235,
       "bb_mid": 3840.29287109375,
       "bb_lower": 3568.6011474122647,
       "atr": 88.64285714285714,
@@ -64,15 +64,15 @@
     "predictions": {
       "bullish_price": 4226,
       "neutral_range": "4,050〜4,200",
-      "bearish_price": 4049,
+      "bearish_price": 4048,
       "scenario": "横ばい"
     },
     "cumulative": {
       "win": 22,
-      "lose": 93,
-      "self_score_sum": 4200,
-      "self_score_count": 115,
-      "day": 118
+      "lose": 94,
+      "self_score_sum": 4225,
+      "self_score_count": 116,
+      "day": 119
     }
   }
 }
